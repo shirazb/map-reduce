@@ -10,4 +10,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CMAKE_CXX_EXTENSIONS OFF)
 endif()
 
+configure_file(
+        "${PROJECT_SOURCE_DIR}/include/version.h.in"
+        "${PROJECT_BINARY_DIR}/include/version.h"
+)
+
 add_subdirectory(exe)
