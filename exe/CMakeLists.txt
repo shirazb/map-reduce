@@ -1,0 +1,2 @@
+add_executable(print_version print_version.cpp)
+target_compile_features(print_version PRIVATE cxx_std_17)
