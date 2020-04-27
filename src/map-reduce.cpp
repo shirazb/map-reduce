@@ -19,21 +19,31 @@ void MapReduce::execute(std::initializer_list<int> data) {
      * Here, for convenience, our "document" is a list of ints, and each map
      * function operates not on a (presumably smaller) list of ints, but
      * on a single int.
+     *
+     * Similarly, for reduce, we have simplified. Usually, the function will
+     * emit a document, that may be distributed in nature. Instead, we emit a
+     * list. We also assume the type of that list - pair(int, int).
      */
 
     for (auto x: data) {
         this->map(x, x);
     }
+
+    // this->intermediates now populated
+
+    for (const auto& pair: this->intermediates) {
+        this->reduce(pair.first, pair.second);
+    }
 }
 
-void MapReduce::dump_intermediates_cout() {
-    for (const auto& pair: this->intermediates) {
-        std::cout << pair.first << ": ";
-        for (auto val: pair.second) {
-            std::cout << val << ", ";
-        }
-        std::cout << std::endl;
+void MapReduce::dump_results() {
+    for (const auto& pair: this->results) {
+        std::cout << pair.first << ": " << pair.second << std::endl;
     }
+}
+
+void MapReduce::emit(std::pair<int, int> result) {
+    this->results.emplace_back(result);
 }
 
 }
