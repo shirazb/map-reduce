@@ -16,7 +16,7 @@ public:
     void dump_intermediates_cout();
 
 private:
-    virtual void map_func(int key, int value) = 0;
+    virtual void map(int key, int value) = 0;
 
     std::unordered_map<int, std::list<int>> intermediates;
 };

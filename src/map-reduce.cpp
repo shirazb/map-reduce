@@ -22,7 +22,7 @@ void MapReduce::execute(std::initializer_list<int> data) {
      */
 
     for (auto x: data) {
-        this->map_func(x, x);
+        this->map(x, x);
     }
 }
 
