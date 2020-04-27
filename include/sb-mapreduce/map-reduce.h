@@ -11,7 +11,7 @@ class MapReduce {
 public:
     void emit_intermediate(int key, int value);
 
-    void map(std::initializer_list<int> data);
+    void execute(std::initializer_list<int> data);
 
     void dump_intermediates_cout();
 

@@ -14,6 +14,6 @@ int main() {
     std::cout << "Version: " << SB_MAPREDUCE_VERSION << std::endl;
 
     SomeMap map;
-    map.map({1, 2, 3, 3, 4, 5, 6});
+    map.execute({1, 2, 3, 3, 4, 5, 6});
     map.dump_intermediates_cout();
 }
