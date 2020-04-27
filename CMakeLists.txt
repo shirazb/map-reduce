@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16...3.17)
 
 project(SBMapReduce 
         VERSION 0.1
