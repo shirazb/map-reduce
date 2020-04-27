@@ -1,5 +1,6 @@
-# VSCode settings
+# IDE
 .vscode/
+.idea/
 
 # Likely build folder location
 /build/
