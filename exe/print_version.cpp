@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "version.h"
+#include <sb-mapreduce/version.h>
 
 int main() {
     std::cout << "Hello, world!" << std::endl;
