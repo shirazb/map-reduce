@@ -15,4 +15,9 @@ configure_file(
         "${PROJECT_BINARY_DIR}/include/sb-mapreduce/version.h"
 )
 
+set(SBMapReduce_INCLUDE_DIR "${SBMapReduce_SOURCE_DIR}/include")
+set(SBMapReduce_BINARY_INCLUDE_DIR "${PROJECT_BINARY_DIR}/include")
+
+add_subdirectory(src)
+
 add_subdirectory(exe)
