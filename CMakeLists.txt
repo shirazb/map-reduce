@@ -18,6 +18,7 @@ configure_file(
 set(SBMapReduce_INCLUDE_DIR "${SBMapReduce_SOURCE_DIR}/include")
 set(SBMapReduce_BINARY_INCLUDE_DIR "${PROJECT_BINARY_DIR}/include")
 
-add_subdirectory(src)
+#add_subdirectory(src)
+add_subdirectory(include)
 
 add_subdirectory(exe)
