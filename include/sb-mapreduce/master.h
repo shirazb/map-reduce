@@ -5,7 +5,6 @@
 #include <exception>
 #include <vector>
 #include <string>
-#include <sstream>
 
 namespace shiraz::MapReduce {
 

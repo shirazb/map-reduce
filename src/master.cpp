@@ -3,6 +3,7 @@
 #include <sb-mapreduce/worker.h>
 
 #include <unordered_set>
+#include <sstream>
 
 namespace shiraz::MapReduce {
 
