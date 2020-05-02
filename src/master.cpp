@@ -20,12 +20,12 @@ Master::Master(
         intermediate_hash{intermediate_hash}
 {
     // Establish invariant: Enough workers for the tasks.
-    if (input_file_iterators.size() > num_workers ||
-            output_file_iterators.size() > num_workers) {
-        throw MasterNotEnoughWorkersException(
-                input_file_iterators.size(),
-                output_file_iterators.size(),
-                num_workers
+    if (this->input_file_iterators.size() > this->num_workers ||
+            this->output_file_iterators.size() > this->num_workers) {
+        throw Master::NotEnoughWorkersException(
+                this->input_file_iterators.size(),
+                this->output_file_iterators.size(),
+                this->num_workers
         );
     }
 }
@@ -46,10 +46,13 @@ void Master::go() {
     // Assume for now we definitely have enough workers to do this in iteration
     // of the outer loop.
 
-    // While files remain, schedule as many map tasks as possible.
-    while (cur_ifstream_it_it != end_ifstream_it_it) {
-        while (!free_workers.empty()) {
-            Worker w{*free_workers.begin()};
+    // While workers remain, keep scheduling tasks.
+    while (!free_workers.empty()) {
+        while (cur_ifstream_it_it != end_ifstream_it_it) {
+            Worker w = free_workers.extract(
+                    free_workers.begin()
+            ).value();
+
             w.map_task(this->map_f, *cur_ifstream_it_it);
 
             busy_workers.emplace(std::move(w));
@@ -61,5 +64,30 @@ void Master::go() {
     // This would happen from messages passed from worker to master.
     std::swap(free_workers, busy_workers);
 }
+
+Master::NotEnoughWorkersException::NotEnoughWorkersException(
+            std::size_t num_ifstreams,
+            std::size_t num_ofstreams,
+            int num_workers
+    ):
+            invalid_argument(build_error_str(
+                    num_ifstreams, num_ofstreams, num_workers
+            ))
+    {}
+
+std::string Master::NotEnoughWorkersException::build_error_str(
+            std::size_t num_ifstreams,
+            std::size_t num_ofstreams,
+            int num_workers
+    ) {
+        std::ostringstream msg;
+        msg << "Number workers must be at least the number of ifstreams and " <<
+            "number of ofstreams. " <<
+            "Number workers = " << num_workers <<
+            ". Number ifstreams = " << num_ifstreams <<
+            ". Number ofstreams = " << num_ofstreams;
+
+        return msg.str();
+    }
 
 } // namespace shiraz::MapReduce
