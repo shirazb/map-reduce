@@ -1,9 +1,11 @@
 set(SOURCES
         master.cpp
+        worker.cpp
 )
 
 set(HEADERS
         ${SBMapReduce_INCLUDE_DIR}/sb-mapreduce/master.h
+        ${SBMapReduce_INCLUDE_DIR}/sb-mapreduce/worker.h
 )
 
 add_library(libsb-mapreduce ${SOURCES} ${HEADERS})
