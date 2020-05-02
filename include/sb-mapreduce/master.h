@@ -7,14 +7,18 @@
 
 namespace shiraz::MapReduce {
 
+using InputFileIterator = std::vector<std::istream_iterator<std::string>>;
+using OutputFileIterator = std::vector<std::ostream_iterator<std::string>>;
+
 using UserMapFunc = void(*)(int, int);
+
 using IntermediateHashFunc = int (*)(int);
 
 class Master {
 public:
     Master(
-            std::vector<std::istream_iterator<std::string>> input_files,
-            std::vector<std::ostream_iterator<std::string>> output_files,
+            InputFileIterator input_file_iterators,
+            OutputFileIterator output_file_iterators,
             UserMapFunc map_f,
             int num_workers,
             IntermediateHashFunc intermediate_hash
@@ -30,8 +34,8 @@ public:
 
 private:
     // file stream iterators
-    std::vector<std::istream_iterator<std::string>> input_files; // size M
-    std::vector<std::ostream_iterator<std::string>> output_files; // size R
+    InputFileIterator input_file_iterators; // size M
+    OutputFileIterator output_file_iterators; // size R
 
     UserMapFunc map_f{};
     //UserReduceFunc

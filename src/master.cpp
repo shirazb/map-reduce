@@ -4,14 +4,14 @@
 namespace shiraz::MapReduce {
 
 Master::Master(
-        std::vector<std::istream_iterator<std::string>> input_files,
-        std::vector<std::ostream_iterator<std::string>> output_files,
+        InputFileIterator input_file_iterators,
+        OutputFileIterator output_file_iterators,
         UserMapFunc map_f,
         int num_workers,
         IntermediateHashFunc intermediate_hash
 ) :
-        input_files{std::move(input_files)},
-        output_files{std::move(output_files)},
+        input_file_iterators{std::move(input_file_iterators)},
+        output_file_iterators{std::move(output_file_iterators)},
         map_f{map_f},
         num_workers{num_workers},
         intermediate_hash{intermediate_hash}
