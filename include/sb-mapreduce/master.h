@@ -2,13 +2,15 @@
 #pragma once
 
 #include <iterator>
+#include <exception>
 #include <vector>
 #include <string>
+#include <sstream>
 
 namespace shiraz::MapReduce {
 
-using InputFileIterator = std::vector<std::istream_iterator<std::string>>;
-using OutputFileIterator = std::vector<std::ostream_iterator<std::string>>;
+using InputFileIterator = std::istream_iterator<std::string>;
+using OutputFileIterator = std::ostream_iterator<std::string>;
 
 using UserMapFunc = void(*)(int, int);
 
@@ -17,8 +19,8 @@ using IntermediateHashFunc = int (*)(int);
 class Master {
 public:
     Master(
-            InputFileIterator input_file_iterators,
-            OutputFileIterator output_file_iterators,
+            std::vector<InputFileIterator> input_file_iterators,
+            std::vector<OutputFileIterator> output_file_iterators,
             UserMapFunc map_f,
             int num_workers,
             IntermediateHashFunc intermediate_hash
@@ -34,8 +36,8 @@ public:
 
 private:
     // file stream iterators
-    InputFileIterator input_file_iterators; // size M
-    OutputFileIterator output_file_iterators; // size R
+    std::vector<InputFileIterator> input_file_iterators; // size M
+    std::vector<OutputFileIterator> output_file_iterators; // size R
 
     UserMapFunc map_f{};
     //UserReduceFunc
@@ -43,6 +45,35 @@ private:
     int num_workers;
 
     IntermediateHashFunc intermediate_hash;
+};
+
+struct MasterNotEnoughWorkersException: std::invalid_argument {
+
+    MasterNotEnoughWorkersException(
+            std::size_t num_ifstreams,
+            std::size_t num_ofstreams,
+            int num_workers
+    ):
+            invalid_argument(build_error_str(
+                    num_ifstreams, num_ofstreams, num_workers
+            ))
+    {}
+
+private:
+    static std::string build_error_str(
+            std::size_t num_ifstreams,
+            std::size_t num_ofstreams,
+            int num_workers
+    ) {
+        std::ostringstream msg;
+        msg << "Number workers must be at least the number of ifstreams and " <<
+            "number of ofstreams. " <<
+            "Number workers = " << num_workers <<
+            ". Number ifstreams = " << num_ifstreams <<
+            ". Number ofstreams = " << num_ofstreams;
+
+        return msg.str();
+    }
 };
 
 } // namespace shiraz::MapReduce
