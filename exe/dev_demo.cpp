@@ -18,7 +18,7 @@ const std::string data_root_path = "data/";
 const std::string input_file_name = "pg-being_ernest.txt";
 const std::string input_file_path = data_root_path + input_file_name;
 
-const std::string temp_data_dir_path = data_root_path + "/tmp/";
+const std::string temp_data_dir_path = data_root_path + "tmp/";
 const std::string preproc_files_prefix = "preprocessed_words_only_";
 
 const std::string preproc_file_path = temp_data_dir_path + preproc_files_prefix
