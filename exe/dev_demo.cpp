@@ -12,7 +12,7 @@
 
 using namespace shiraz;
 
-#define num_workers 10
+#define NUM_WORKERS 10
 
 /*********************** prototypes *******************************************/
 
@@ -37,6 +37,13 @@ void preprocess_input_file(
 
 std::string remove_punctuation(std::string s);
 
+
+auto map_f = [](std::string k, MapReduce::IntermediateEmitter& emit) {
+             emit(k, std::to_string(1));
+};
+
+auto intermediate_hash = [](int k){ return k % NUM_WORKERS; };
+
 }
 
 /*********************** main() ***********************************************/
@@ -57,15 +64,10 @@ int main() {
 
     std::vector<MapReduce::OutputFileIterator> outputs;
 
-    auto map_f = [](std::string k, MapReduce::IntermediateEmitter& emit) {
-             emit(k, k + "-value");
-    };
-    auto intermediate_hash = [](int k){ return k % num_workers; };
-
     MapReduce::Master master{
             inputs, outputs,
             map_f,
-            num_workers,
+            NUM_WORKERS,
             intermediate_hash
     };
 
