@@ -8,6 +8,8 @@
 #include <iostream>
 #include <iterator>
 
+using namespace shiraz;
+
 /*********************** prototypes *******************************************/
 
 namespace {
@@ -36,6 +38,9 @@ void log_file(
 
 std::string remove_punctuation(std::string s);
 
+MapReduce::InputFileIterator
+mk_mr_input_file_iterator(const std::string);
+
 }
 
 /*********************** main() ***********************************************/
@@ -50,7 +55,30 @@ int main() {
 
     // Done: log preprocessed file.
 
-    log_file(preproc_file_path);
+    //log_file(preproc_file_path);
+
+    // Create MapReduce::Master
+
+    std::vector<MapReduce::InputFileIterator> inputs;
+    inputs.push_back(mk_mr_input_file_iterator(preproc_file_path));
+
+    std::vector<MapReduce::OutputFileIterator> outputs;
+
+    int num_workers = 10;
+
+    auto map_f = [](int, int){};
+    auto intermediate_hash = [](int k){ return k % 5; };
+
+    MapReduce::Master master{
+            inputs, outputs,
+            map_f,
+            num_workers,
+            intermediate_hash
+    };
+
+    master.go();
+
+    std::cout << "Done master.go()!" << std::endl;
 }
 
 /*********************** helpers **********************************************/
@@ -110,5 +138,17 @@ void log_file(
         std::cout << word << std::endl;
     }
 }
+
+/**
+ * Precond: Have already checked input_file_path can be opened.
+ */
+MapReduce::InputFileIterator
+mk_mr_input_file_iterator(const std::string input_file_path) {
+    std::ifstream&& ifs{input_file_path};
+    std::istream_iterator<std::string>&& ifs_it{ifs};
+
+    return ifs_it;
+}
+
 
 }
