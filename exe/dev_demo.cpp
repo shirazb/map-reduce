@@ -94,6 +94,7 @@ std::string remove_punctuation(std::string s) {
         s.end()
     );
 
+    // Output words with spaces between them.
     return s + ' ';
 }
 
