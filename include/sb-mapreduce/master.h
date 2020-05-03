@@ -14,7 +14,7 @@ struct IntermediateEmitter;
 using InputFileIterator = std::istream_iterator<std::string>;
 using OutputFileIterator = std::ostream_iterator<std::string>;
 
-using UserMapFunc = void(*)(std::string, std::string, IntermediateEmitter);
+using UserMapFunc = void(*)(std::string, IntermediateEmitter&);
 
 using IntermediateHashFunc = int(*)(int);
 
@@ -53,7 +53,7 @@ private:
 
 struct IntermediateEmitter {
 public:
-    IntermediateEmitter(std::ofstream intermediate_ofs):
+    explicit IntermediateEmitter(std::ofstream&& intermediate_ofs):
             intermediate_ofs{std::move(intermediate_ofs)} {}
 
     void operator()(const std::string ikey, const std::string ivalue) {

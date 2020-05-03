@@ -4,6 +4,25 @@
 
 #include <unordered_set>
 #include <sstream>
+#include <iostream>
+
+void log_file(
+        const std::string file_path,
+        int num_words = 30
+) {
+    std::ifstream ifs{file_path};
+    if (!ifs) {
+        throw std::invalid_argument("Could not open log file for reading: "
+                + file_path
+        );
+    }
+
+    for (int i = 0; i < num_words; i++) {
+        std::string word;
+        ifs >> word;
+        std::cout << word << std::endl;
+    }
+}
 
 namespace shiraz::MapReduce {
 
@@ -81,6 +100,8 @@ void Master::go() {
     free_workers.merge(busy_workers);
 
     /* Reduce Stage */
+
+    log_file(intermediate_file_paths.at(0));
 }
 
 Master::NotEnoughWorkersException::NotEnoughWorkersException(
