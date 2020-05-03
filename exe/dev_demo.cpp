@@ -36,9 +36,6 @@ void preprocess_input_file(
 
 std::string remove_punctuation(std::string s);
 
-MapReduce::InputFileIterator
-mk_mr_input_file_iterator(const std::string&);
-
 }
 
 /*********************** main() ***********************************************/
