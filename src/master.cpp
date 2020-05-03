@@ -35,10 +35,18 @@ void Master::go() {
     std::unordered_set<Worker, Worker::Hash> free_workers;
     std::unordered_set<Worker, Worker::Hash> busy_workers;
 
-    // Construct all the workers.
+    /* Construct all the workers. */
+
     for (int i = 0; i < this->num_workers; i++) {
         free_workers.emplace(Worker{i});
     }
+
+    /* Store intermediate output paths returned by map so we can forward to
+       reduce */
+    
+    std::vector<std::string> intermediate_file_paths;
+
+    /* Map Stage */
 
     // Iterator of file stream iterators
     auto cur_ifstream_it_it = this->input_file_iterators.begin();
@@ -48,13 +56,19 @@ void Master::go() {
     // of the outer loop.
 
     // While workers remain, keep scheduling tasks.
+    // Move free workers into busy set.
+    // Invoke map task on free worker and store returned intermediate file path.
     while (cur_ifstream_it_it != end_ifstream_it_it) {
         while (!free_workers.empty() && cur_ifstream_it_it != end_ifstream_it_it) {
             Worker w = free_workers.extract(
                     free_workers.begin()
             ).value();
 
-            w.map_task(this->map_f, *cur_ifstream_it_it);
+            intermediate_file_paths.emplace_back(
+                    w.map_task(
+                        this->map_f, *cur_ifstream_it_it
+                    )
+            );
 
             busy_workers.emplace(std::move(w));
 
@@ -65,6 +79,8 @@ void Master::go() {
     // Extract all workers from busy to free set.
     // This would happen from messages passed from worker to master.
     free_workers.merge(busy_workers);
+
+    /* Reduce Stage */
 }
 
 Master::NotEnoughWorkersException::NotEnoughWorkersException(
