@@ -29,7 +29,13 @@ void preprocess_input_file(
         const std::string preproc_file_path
 );
 
+void log_file(
+        const std::string file_path,
+        int num_words = 40
+);
+
 std::string remove_punctuation(std::string s);
+
 }
 
 /*********************** main() ***********************************************/
@@ -44,18 +50,7 @@ int main() {
 
     // Done: log preprocessed file.
 
-    std::ifstream preproc_ifs{preproc_file_path};
-    if (!preproc_ifs) {
-        throw std::invalid_argument("Could not open preproc file for reading: "
-                + preproc_file_path
-        );
-    }
-
-    for (int i = 0; i < 40; i++) {
-        std::string word;
-        preproc_ifs >> word;
-        std::cout << word << std::endl;
-    }
+    log_file(preproc_file_path);
 }
 
 /*********************** helpers **********************************************/
@@ -96,6 +91,24 @@ std::string remove_punctuation(std::string s) {
 
     // Output words with spaces between them.
     return s + ' ';
+}
+
+void log_file(
+        const std::string file_path,
+        int num_words
+) {
+    std::ifstream ifs{file_path};
+    if (!ifs) {
+        throw std::invalid_argument("Could not open log file for reading: "
+                + file_path
+        );
+    }
+
+    for (int i = 0; i < num_words; i++) {
+        std::string word;
+        ifs >> word;
+        std::cout << word << std::endl;
+    }
 }
 
 }
