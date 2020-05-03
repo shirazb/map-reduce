@@ -62,8 +62,9 @@ void Master::go() {
         }
     }
 
+    // Extract all workers from busy to free set.
     // This would happen from messages passed from worker to master.
-    std::swap(free_workers, busy_workers);
+    free_workers.merge(busy_workers);
 }
 
 Master::NotEnoughWorkersException::NotEnoughWorkersException(
