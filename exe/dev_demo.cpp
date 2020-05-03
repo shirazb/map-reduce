@@ -41,7 +41,7 @@ void log_file(
 std::string remove_punctuation(std::string s);
 
 MapReduce::InputFileIterator
-mk_mr_input_file_iterator(const std::string);
+mk_mr_input_file_iterator(const std::string&);
 
 }
 
@@ -62,12 +62,15 @@ int main() {
     // Create MapReduce::Master
 
     std::vector<MapReduce::InputFileIterator> inputs;
-    inputs.push_back(mk_mr_input_file_iterator(preproc_file_path));
+    //inputs.push_back(mk_mr_input_file_iterator(preproc_file_path));
+
+    std::ifstream preproc_ifs{preproc_file_path};
+    inputs.push_back(MapReduce::InputFileIterator{preproc_ifs});
 
     std::vector<MapReduce::OutputFileIterator> outputs;
 
-    auto map_f = [](std::string k, std::string v, MapReduce::IntermediateEmitter emit) {
-             emit(k, v);
+    auto map_f = [](std::string k, MapReduce::IntermediateEmitter& emit) {
+             emit(k, k + "-value");
     };
     auto intermediate_hash = [](int k){ return k % num_workers; };
 
@@ -108,7 +111,7 @@ void preprocess_input_file(
 
     std::istream_iterator<std::string> ifs_it{ifs};
     std::istream_iterator<std::string> end_ifs_it{}; // EOS sentinel
-    std::ostream_iterator<std::string> ofs_it{ofs};
+    std::ostream_iterator<std::string> ofs_it{ofs, "\n"};
 
     std::transform(ifs_it, end_ifs_it, ofs_it, remove_punctuation);
 }
@@ -119,8 +122,7 @@ std::string remove_punctuation(std::string s) {
         s.end()
     );
 
-    // Output words with spaces between them.
-    return s + ' ';
+    return s;
 }
 
 void log_file(
@@ -145,9 +147,9 @@ void log_file(
  * Precond: Have already checked input_file_path can be opened.
  */
 MapReduce::InputFileIterator
-mk_mr_input_file_iterator(const std::string input_file_path) {
-    std::ifstream&& ifs{input_file_path};
-    std::istream_iterator<std::string>&& ifs_it{ifs};
+mk_mr_input_file_iterator(const std::string& input_file_path) {
+    std::ifstream ifs{input_file_path};
+    std::istream_iterator<std::string> ifs_it{ifs};
 
     return ifs_it;
 }
