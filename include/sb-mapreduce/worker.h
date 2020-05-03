@@ -9,7 +9,8 @@ class Worker {
 public:
     explicit Worker(int id) : id{id} {}
 
-    void map_task(UserMapFunc map_f, InputFileIterator input_file_iterators);
+    std::string
+    map_task(UserMapFunc map_f, InputFileIterator input_file_iterator);
 
     struct Hash {
         std::size_t operator()(const Worker& w) const {
