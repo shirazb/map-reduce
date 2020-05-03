@@ -10,6 +10,8 @@
 
 using namespace shiraz;
 
+#define num_workers 10
+
 /*********************** prototypes *******************************************/
 
 namespace {
@@ -64,10 +66,10 @@ int main() {
 
     std::vector<MapReduce::OutputFileIterator> outputs;
 
-    int num_workers = 10;
-
-    auto map_f = [](int, int){};
-    auto intermediate_hash = [](int k){ return k % 5; };
+    auto map_f = [](std::string k, std::string v, MapReduce::IntermediateEmitter emit) {
+             emit(k, v);
+    };
+    auto intermediate_hash = [](int k){ return k % num_workers; };
 
     MapReduce::Master master{
             inputs, outputs,

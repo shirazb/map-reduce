@@ -5,15 +5,18 @@
 #include <exception>
 #include <vector>
 #include <string>
+#include <fstream>
 
 namespace shiraz::MapReduce {
+
+struct IntermediateEmitter;
 
 using InputFileIterator = std::istream_iterator<std::string>;
 using OutputFileIterator = std::ostream_iterator<std::string>;
 
-using UserMapFunc = void(*)(int, int);
+using UserMapFunc = void(*)(std::string, std::string, IntermediateEmitter);
 
-using IntermediateHashFunc = int (*)(int);
+using IntermediateHashFunc = int(*)(int);
 
 class Master {
 public:
@@ -46,6 +49,19 @@ private:
     int num_workers;
 
     IntermediateHashFunc intermediate_hash;
+};
+
+struct IntermediateEmitter {
+public:
+    IntermediateEmitter(std::ofstream intermediate_ofs):
+            intermediate_ofs{std::move(intermediate_ofs)} {}
+
+    void operator()(const std::string ikey, const std::string ivalue) {
+        intermediate_ofs << ikey << "," << ivalue << std::endl;
+    }
+
+private:
+    std::ofstream intermediate_ofs;
 };
 
 struct Master::NotEnoughWorkersException: std::invalid_argument {
