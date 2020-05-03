@@ -1,5 +1,8 @@
-add_executable(print_version print_version.cpp)
+add_executable(dev_demo dev_demo.cpp ${SBMapReduce_BINARY_INCLUDE_DIR}/sb-mapreduce/version.h)
 
-target_compile_features(print_version PRIVATE cxx_std_17)
+target_compile_features(dev_demo PRIVATE cxx_std_17)
 
-target_link_libraries(print_version PRIVATE libsb-mapreduce)
+# For version.h
+target_include_directories(dev_demo PRIVATE ${SBMapReduce_BINARY_INCLUDE_DIR})
+
+target_link_libraries(dev_demo PRIVATE libsb-mapreduce)
