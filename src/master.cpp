@@ -48,8 +48,8 @@ void Master::go() {
     // of the outer loop.
 
     // While workers remain, keep scheduling tasks.
-    while (!free_workers.empty()) {
-        while (cur_ifstream_it_it != end_ifstream_it_it) {
+    while (cur_ifstream_it_it != end_ifstream_it_it) {
+        while (!free_workers.empty() && cur_ifstream_it_it != end_ifstream_it_it) {
             Worker w = free_workers.extract(
                     free_workers.begin()
             ).value();
