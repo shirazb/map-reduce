@@ -1,6 +1,6 @@
 // Maintainer: Shiraz Butt (shiraz.b@icloud.com).
 #include <sb-mapreduce/worker.h>
-#include <sb-mapreduce/master.h>
+#include <sb-mapreduce/common.h>
 
 #include <iterator>
 #include <fstream>

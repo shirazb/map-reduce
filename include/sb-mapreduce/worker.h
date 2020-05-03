@@ -1,7 +1,7 @@
 // Maintainer: Shiraz Butt (shiraz.b@icloud.com).
 #pragma once
 
-#include "master.h"
+#include <sb-mapreduce/common.h>
 
 namespace shiraz::MapReduce {
 

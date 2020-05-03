@@ -1,6 +1,8 @@
 // Maintainer: Shiraz Butt (shiraz.b@icloud.com).
 #pragma once
 
+#include <sb-mapreduce/common.h>
+
 #include <iterator>
 #include <exception>
 #include <vector>
@@ -8,15 +10,6 @@
 #include <fstream>
 
 namespace shiraz::MapReduce {
-
-struct IntermediateEmitter;
-
-using InputFileIterator = std::istream_iterator<std::string>;
-using OutputFileIterator = std::ostream_iterator<std::string>;
-
-using UserMapFunc = void(*)(std::string, IntermediateEmitter&);
-
-using IntermediateHashFunc = int(*)(int);
 
 class Master {
 public:
@@ -49,19 +42,6 @@ private:
     int num_workers;
 
     IntermediateHashFunc intermediate_hash;
-};
-
-struct IntermediateEmitter {
-public:
-    explicit IntermediateEmitter(std::ofstream&& intermediate_ofs):
-            intermediate_ofs{std::move(intermediate_ofs)} {}
-
-    void operator()(const std::string ikey, const std::string ivalue) {
-        intermediate_ofs << ikey << "," << ivalue << std::endl;
-    }
-
-private:
-    std::ofstream intermediate_ofs;
 };
 
 struct Master::NotEnoughWorkersException: std::invalid_argument {
