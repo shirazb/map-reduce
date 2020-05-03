@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <filesystem>
 
 using namespace shiraz;
 
@@ -43,10 +44,10 @@ std::string remove_punctuation(std::string s);
 int main() {
     std::cout << "sb-mapreduce" << std::endl;
     std::cout << "Version: " << SB_MAPREDUCE_VERSION << std::endl;
-
-    std::cout << std::endl << std::endl;
+    std::cout << std::endl;
 
     preprocess_input_file(input_file_path, preproc_file_path);
+    std::cout << std::endl;
 
     // Create MapReduce::Master
 
@@ -70,7 +71,7 @@ int main() {
 
     master.go();
 
-    std::cout << "Done master.go()!" << std::endl;
+    std::cout << std::endl << std::endl << "Done master.go()!" << std::endl;
 }
 
 /*********************** helpers **********************************************/
@@ -81,6 +82,13 @@ void preprocess_input_file(
         const std::string input_file_path,
         const std::string preproc_file_path
 ) {
+    // Already done in previous invocation
+    if (std::filesystem::exists(preproc_file_path)) {
+        std::cout << "Note: Reusing existing preprocessed input file: " + 
+                preproc_file_path << std::endl; 
+        return;
+    }
+    
     std::ifstream ifs{input_file_path};
     if (!ifs) {
         throw std::invalid_argument(
