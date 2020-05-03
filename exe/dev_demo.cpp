@@ -1,6 +1,7 @@
 // Maintainer: Shiraz Butt (shiraz.b@icloud.com).
 #include <sb-mapreduce/version.h>
 #include <sb-mapreduce/master.h>
+#include <sb-mapreduce/common.h>
 
 #include <string>
 #include <exception>
@@ -33,11 +34,6 @@ void preprocess_input_file(
         const std::string preproc_file_path
 );
 
-void log_file(
-        const std::string file_path,
-        int num_words = 40
-);
-
 std::string remove_punctuation(std::string s);
 
 MapReduce::InputFileIterator
@@ -55,15 +51,9 @@ int main() {
 
     preprocess_input_file(input_file_path, preproc_file_path);
 
-    // Done: log preprocessed file.
-
-    //log_file(preproc_file_path);
-
     // Create MapReduce::Master
 
     std::vector<MapReduce::InputFileIterator> inputs;
-    //inputs.push_back(mk_mr_input_file_iterator(preproc_file_path));
-
     std::ifstream preproc_ifs{preproc_file_path};
     inputs.push_back(MapReduce::InputFileIterator{preproc_ifs});
 
@@ -124,35 +114,5 @@ std::string remove_punctuation(std::string s) {
 
     return s;
 }
-
-void log_file(
-        const std::string file_path,
-        int num_words
-) {
-    std::ifstream ifs{file_path};
-    if (!ifs) {
-        throw std::invalid_argument("Could not open log file for reading: "
-                + file_path
-        );
-    }
-
-    for (int i = 0; i < num_words; i++) {
-        std::string word;
-        ifs >> word;
-        std::cout << word << std::endl;
-    }
-}
-
-/**
- * Precond: Have already checked input_file_path can be opened.
- */
-MapReduce::InputFileIterator
-mk_mr_input_file_iterator(const std::string& input_file_path) {
-    std::ifstream ifs{input_file_path};
-    std::istream_iterator<std::string> ifs_it{ifs};
-
-    return ifs_it;
-}
-
 
 }
