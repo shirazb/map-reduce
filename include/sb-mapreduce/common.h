@@ -50,7 +50,8 @@ namespace shiraz::MapReduce::utils {
 
 void log_file(
         const std::string file_path,
-        int num_words = 30
+        int num_words = 30,
+        char get_line_delim = '\n'
 );
 
 

@@ -9,7 +9,8 @@ namespace shiraz::MapReduce::utils {
 
 void log_file(
         const std::string file_path,
-        int num_words
+        int num_words,
+        char get_line_delim
 ) {
     std::ifstream ifs{file_path};
     if (!ifs) {
@@ -22,7 +23,7 @@ void log_file(
 
     for (int i = 0; i < num_words; i++) {
         std::string word;
-        ifs >> word;
+        std::getline(ifs, word, get_line_delim);
         std::cout << word << std::endl;
     }
 }
