@@ -5,6 +5,19 @@
 #include <iterator>
 #include <fstream>
 #include <filesystem>
+#include <string>
+#include <list>
+#include <unordered_map>
+#include <sstream>
+
+namespace {
+void
+parse_intermediate_entry(
+        const std::string s,
+        std::string& ikey,
+        std::string& ivalue
+);
+}
 
 namespace shiraz::MapReduce {
 
@@ -40,4 +53,48 @@ Worker::map_task(
     return intermediate_file_path;
 }
 
+void
+Worker::reduce_task(
+        UserReduceFunc reduce_f,
+        InputFileIterator intermediate_file_it,
+        OutputFileIterator output_file_it
+) {
+    /* Build intermediates map. */
+
+    std::unordered_map<std::string, std::list<std::string>> intermediates;
+
+    InputFileIterator eos_it{};
+
+    for (; intermediate_file_it != eos_it; intermediate_file_it++) {
+        std::string ikey, ivalue;
+        parse_intermediate_entry(*intermediate_file_it, ikey, ivalue);
+
+        intermediates[ikey].emplace_back(std::move(ivalue));
+    }
+
+    /* Run user reduce func on each key */
+    ResultEmitter emit{output_file_it};
+
+    const auto dispatch_reduce_f = [&](auto const& pair) { 
+            reduce_f(pair.first, pair.second, emit);
+    };
+
+    std::for_each(intermediates.begin(), intermediates.end(), dispatch_reduce_f);
+}
+
 } // namespace shiraz::MapReduce
+
+namespace {
+
+void
+parse_intermediate_entry(
+        const std::string s,
+        std::string& ikey,
+        std::string& ivalue
+) {
+    std::istringstream ss(s);
+    std::getline(ss, ikey, ',');
+    std::getline(ss, ivalue);
+}
+
+}

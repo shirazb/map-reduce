@@ -12,6 +12,10 @@ public:
     std::string
     map_task(UserMapFunc map_f, InputFileIterator input_file_iterator);
 
+    void
+    reduce_task(UserReduceFunc reduce_f, InputFileIterator intermediate_file_it, 
+            OutputFileIterator output_file_it);
+
     struct Hash {
         std::size_t operator()(const Worker& w) const {
             return std::hash<int>{}(w.id);
