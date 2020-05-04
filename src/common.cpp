@@ -39,9 +39,9 @@ void IntermediateEmitter::operator()(
 }
 
 void ResultEmitter::operator()(
-        const std::string rvalue
+        const std::string resvalue
 ) {
-    this->result_ofs << rvalue << std::endl;
+    *this->output_it++ = resvalue;
 }
 
 }

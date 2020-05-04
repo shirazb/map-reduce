@@ -4,17 +4,19 @@
 #include <fstream>
 #include <list>
 
-namespace shiraz::MapReduce::utils {
-
-void log_file(
-        const std::string file_path,
-        int num_words = 30
-);
-
-
-}
-
 namespace shiraz::MapReduce {
+
+struct IntermediateEmitter;
+struct ResultEmitter;
+
+using InputFileIterator = std::istream_iterator<std::string>;
+using OutputFileIterator = std::ostream_iterator<std::string>;
+
+using UserMapFunc = void(*)(std::string, IntermediateEmitter&);
+using UserReduceFunc = void(*)(std::string, std::list<std::string>, ResultEmitter&);
+
+using IntermediateHashFunc = int(*)(int);
+
 
 struct IntermediateEmitter {
 public:
@@ -32,22 +34,24 @@ private:
 struct ResultEmitter {
 public:
     ResultEmitter(
-            std::ofstream result_ofs
+            OutputFileIterator output_it
     ):
-            result_ofs{std::move(result_ofs)} {}
+            output_it{std::move(output_it)} {}
 
-    void operator()(const std::string rvalue);
+    void operator()(const std::string resvalue);
 
 private:
-    std::ofstream result_ofs;
+    OutputFileIterator output_it;
 };
 
-using InputFileIterator = std::istream_iterator<std::string>;
-using OutputFileIterator = std::ostream_iterator<std::string>;
+}
 
-using UserMapFunc = void(*)(std::string, IntermediateEmitter&);
-using UserReduceFunc = void(*)(std::string, std::list<std::string>, ResultEmitter&);
+namespace shiraz::MapReduce::utils {
 
-using IntermediateHashFunc = int(*)(int);
+void log_file(
+        const std::string file_path,
+        int num_words = 30
+);
+
 
 }
