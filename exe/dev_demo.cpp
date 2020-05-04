@@ -22,14 +22,20 @@ namespace {
 // CWD must be map-reduce root in build dir.
 
 const std::string data_root_path = "data/";
+
+const std::string input_data_dir_path = data_root_path + "inputs/";
 const std::string input_file_name = "pg-being_ernest.txt";
-const std::string input_file_path = data_root_path + input_file_name;
+const std::string input_file_path = input_data_dir_path + input_file_name;
 
 const std::string temp_data_dir_path = data_root_path + "tmp/";
 const std::string preproc_files_prefix = "preprocessed_words_only_";
 
 const std::string preproc_file_path = temp_data_dir_path + preproc_files_prefix
         + input_file_name;
+
+const std::string output_data_dir_path = data_root_path + "outputs/";
+const std::string output_file_name = "word_count.txt";
+const std::string output_file_path = output_data_dir_path + output_file_name;
 
 void preprocess_input_file(
         const std::string input_file_path,
