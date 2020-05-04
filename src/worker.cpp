@@ -92,6 +92,7 @@ parse_intermediate_entry(
         std::string& ikey,
         std::string& ivalue
 ) {
+    // FIXME: User cannot put comma in key.
     std::istringstream ss(s);
     std::getline(ss, ikey, ',');
     std::getline(ss, ivalue);
