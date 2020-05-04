@@ -95,28 +95,31 @@ int main() {
     preprocess_input_file(input_file_path, preproc_file_path);
     std::cout << std::endl;
 
-    // Create MapReduce::Master
+    // Create and run MapReduce::Master
+    {
+        std::vector<MapReduce::InputFileIterator> inputs;
+        std::ifstream preproc_ifs{preproc_file_path};
+        inputs.emplace_back(MapReduce::InputFileIterator{preproc_ifs});
 
-    std::vector<MapReduce::InputFileIterator> inputs;
-    std::ifstream preproc_ifs{preproc_file_path};
-    inputs.emplace_back(MapReduce::InputFileIterator{preproc_ifs});
+        std::vector<MapReduce::OutputFileIterator> outputs;
+        std::ofstream output_ofs{output_file_path, 
+                std::ofstream::out | std::ofstream::trunc
+        };
+        outputs.emplace_back(MapReduce::OutputFileIterator{output_ofs, "\n"});
+        
+        MapReduce::Master master{
+                inputs, outputs,
+                map_f, reduce_f,
+                NUM_WORKERS,
+                intermediate_hash
+        };
 
-    std::vector<MapReduce::OutputFileIterator> outputs;
-    std::ofstream output_ofs{output_file_path, 
-            std::ofstream::out | std::ofstream::trunc
-    };
-    outputs.emplace_back(MapReduce::OutputFileIterator{output_ofs, "\n"});
-    
-    MapReduce::Master master{
-            inputs, outputs,
-            map_f, reduce_f,
-            NUM_WORKERS,
-            intermediate_hash
-    };
+        master.go();
 
-    master.go();
+        std::cout << std::endl << std::endl << "Done master.go()!" << std::endl;
+    }
 
-    std::cout << std::endl << std::endl << "Done master.go()!" << std::endl;
+    MapReduce::utils::log_file(output_file_path);
 }
 
 /*********************** helpers **********************************************/
