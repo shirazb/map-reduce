@@ -19,7 +19,7 @@ void log_file(
     }
 
     std::cout << "log_file(): " << file_path << std::endl;
-    
+
     for (int i = 0; i < num_words; i++) {
         std::string word;
         ifs >> word;
@@ -35,7 +35,13 @@ void IntermediateEmitter::operator()(
         const std::string ikey, 
         const std::string ivalue
 ) {
-    intermediate_ofs << ikey << "," << ivalue << std::endl;
+    this->intermediate_ofs << ikey << "," << ivalue << std::endl;
+}
+
+void ResultEmitter::operator()(
+        const std::string rvalue
+) {
+    this->result_ofs << rvalue << std::endl;
 }
 
 }
