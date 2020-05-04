@@ -85,6 +85,15 @@ void Master::go() {
     /* Reduce Stage */
 
     utils::log_file(intermediate_file_paths.at(0));
+
+    /* Cleanup */
+
+    // TODO: RAII-ify the intermediate file resource. Also, consider who should 
+    // delete / have ownership.
+
+    std::for_each(intermediate_file_paths.begin(), intermediate_file_paths.end(),
+            [](auto& fp) { std::filesystem::remove(fp); }
+    );
 }
 
 Master::NotEnoughWorkersException::NotEnoughWorkersException(
