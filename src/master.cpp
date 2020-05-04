@@ -84,7 +84,24 @@ void Master::go() {
 
     /* Reduce Stage */
 
-    utils::log_file(intermediate_file_paths.at(0));
+    auto cur_output_file_it = this->output_file_iterators.begin();
+    auto output_file_end_it = this->output_file_iterators.end();
+
+    while (cur_output_file_it != output_file_end_it) {
+        while (!free_workers.empty() && cur_output_file_it != output_file_end_it) {
+            Worker w = free_workers.extract(
+                    free_workers.begin()
+            ).value();
+
+            // w.reduce_task
+
+            busy_workers.emplace(std::move(w));
+
+            ++cur_output_file_it;
+        }
+    }
+
+    free_workers.merge(busy_workers);
 
     /* Cleanup */
 
