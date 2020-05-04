@@ -12,6 +12,7 @@
 
 // Only indent 4 beacuse of stupid editors like VS Code
 namespace {
+
 void
 parse_intermediate_entry(
     const std::string s,

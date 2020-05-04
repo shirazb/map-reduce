@@ -38,12 +38,14 @@ const std::string output_data_dir_path = data_root_path + "outputs/";
 const std::string output_file_name = "word_count.txt";
 const std::string output_file_path = output_data_dir_path + output_file_name;
 
-void preprocess_input_file(
+void
+preprocess_input_file(
         const std::string input_file_path,
         const std::string preproc_file_path
 );
 
-std::string remove_punctuation(std::string s);
+std::string
+remove_punctuation(std::string s);
 
 
 const auto map_f = [](std::string k, MapReduce::IntermediateEmitter& emit) {
@@ -107,7 +109,8 @@ int main() {
 
 namespace {
 
-void preprocess_input_file(
+void
+preprocess_input_file(
         const std::string input_file_path,
         const std::string preproc_file_path
 ) {
@@ -143,7 +146,8 @@ void preprocess_input_file(
     std::transform(ifs_it, end_ifs_it, ofs_it, remove_punctuation);
 }
 
-std::string remove_punctuation(std::string s) {
+std::string
+remove_punctuation(std::string s) {
     s.erase(
         std::remove_if(s.begin(), s.end(), ::ispunct),
         s.end()
@@ -152,7 +156,8 @@ std::string remove_punctuation(std::string s) {
     return s;
 }
 
-void reduce_f(
+void
+reduce_f(
         std::string ikey,
         std::list<std::string> ivalues,
         MapReduce::ResultEmitter& emit

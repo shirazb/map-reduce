@@ -71,7 +71,9 @@ struct Master::NotEnoughWorkersException: std::invalid_argument {
     );
 
 private:
-    static std::string build_error_str(
+    static
+    std::string
+    build_error_str(
             std::size_t num_ifstreams,
             std::size_t num_ofstreams,
             int num_workers

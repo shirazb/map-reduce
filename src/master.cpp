@@ -35,7 +35,8 @@ Master::Master(
     }
 }
 
-void Master::go() {
+void
+Master::go() {
     std::unordered_set<Worker, Worker::Hash> free_workers;
     std::unordered_set<Worker, Worker::Hash> busy_workers;
 
@@ -157,7 +158,8 @@ Master::NotEnoughWorkersException::NotEnoughWorkersException(
             ))
     {}
 
-std::string Master::NotEnoughWorkersException::build_error_str(
+std::string
+Master::NotEnoughWorkersException::build_error_str(
             std::size_t num_ifstreams,
             std::size_t num_ofstreams,
             int num_workers

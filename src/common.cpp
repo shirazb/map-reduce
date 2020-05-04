@@ -7,7 +7,8 @@
 
 namespace shiraz::MapReduce::utils {
 
-void log_file(
+void
+log_file(
         const std::string file_path,
         int num_words,
         char get_line_delim
@@ -32,14 +33,16 @@ void log_file(
 
 namespace shiraz::MapReduce {
 
-void IntermediateEmitter::operator()(
+void
+IntermediateEmitter::operator()(
         const std::string ikey, 
         const std::string ivalue
 ) {
     this->intermediate_ofs << ikey << "," << ivalue << std::endl;
 }
 
-void ResultEmitter::operator()(
+void
+ResultEmitter::operator()(
         const std::string resvalue
 ) {
     this->output_ofs << resvalue << std::endl;
