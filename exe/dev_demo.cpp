@@ -78,7 +78,7 @@ void reduce_f(
     }
 
     std::ostringstream res;
-    res << "(" << ikey << ", " << acc << ")";    
+    res << "(" << ikey << "," << acc << ")";    
 
     emit(res.str());
 };
@@ -119,6 +119,7 @@ int main() {
         std::cout << std::endl << std::endl << "Done master.go()!" << std::endl;
     }
 
+    std::cout << std::endl;
     MapReduce::utils::log_file(output_file_path);
 }
 
