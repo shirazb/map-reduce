@@ -9,6 +9,14 @@ class Worker {
 public:
     explicit Worker(int id) : id{id} {}
 
+    // Not copyable.
+    Worker(const Worker& w) =delete;
+    Worker& operator=(const Worker& w) =delete;
+
+    // Is movable
+    Worker(Worker&& w) =default;
+    Worker& operator=(Worker&& w) =default;
+
     std::string
     map_task(UserMapFunc map_f, InputFileIterator input_file_iterator);
 

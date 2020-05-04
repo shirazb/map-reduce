@@ -90,7 +90,7 @@ Master::map_stage(
     // Invoke map task on free worker and store returned intermediate file path.
     while (cur_ifstream_it_it != end_ifstream_it_it) {
         while (!free_workers.empty() && cur_ifstream_it_it != end_ifstream_it_it) {
-            Worker w = free_workers.extract(
+            Worker& w = free_workers.extract(
                     free_workers.begin()
             ).value();
 
@@ -127,7 +127,7 @@ Master::reduce_stage(
 
     while (cur_output_file_it != output_file_end_it) {
         while (!free_workers.empty() && cur_output_file_it != output_file_end_it) {
-            Worker w = free_workers.extract(
+            Worker& w = free_workers.extract(
                     free_workers.begin()
             ).value();
 
