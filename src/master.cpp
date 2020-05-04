@@ -86,6 +86,7 @@ void Master::go() {
 
     /* Reduce Stage */
 
+    int cur_output_file_idx = 0;
     auto cur_output_file_it = this->output_file_iterators.begin();
     auto output_file_end_it = this->output_file_iterators.end();
 
@@ -95,11 +96,16 @@ void Master::go() {
                     free_workers.begin()
             ).value();
 
-            // w.reduce_task
+            // TODO: For now, we just take 1 intermediate file instead of R.
+            std::ifstream inter_ifs{intermediate_file_paths[cur_output_file_idx]};
+            std::istream_iterator<std::string> inter_it{inter_ifs};
+
+            w.reduce_task(reduce_f, inter_ifs, *cur_output_file_it);
 
             busy_workers.emplace(std::move(w));
 
             ++cur_output_file_it;
+            ++cur_output_file_idx;
         }
     }
 
