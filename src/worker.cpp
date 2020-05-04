@@ -10,12 +10,13 @@
 #include <unordered_map>
 #include <sstream>
 
+// Only indent 4 beacuse of stupid editors like VS Code
 namespace {
 void
 parse_intermediate_entry(
-        const std::string s,
-        std::string& ikey,
-        std::string& ivalue
+    const std::string s,
+    std::string& ikey,
+    std::string& ivalue
 );
 }
 
@@ -24,7 +25,7 @@ namespace shiraz::MapReduce {
 std::string
 Worker::map_task(
         UserMapFunc map_f,
-        InputFileIterator input_file_iterator
+        std::ifstream& input_ifs
 ) {
     /* Intermediate output file stream iterator */
     
@@ -37,16 +38,17 @@ Worker::map_task(
     // TODO: Handle opening error.
     // Create IntermediateEmitter function passed to user map_f that will
     // stream output to file.
-    IntermediateEmitter emit_intermediate{std::ofstream{
-            intermediate_file_path,
+    std::ofstream intermediate_ofs{intermediate_file_path,
             std::ofstream::out | std::ofstream::trunc
-    }};
+    };
+    IntermediateEmitter emit_intermediate{intermediate_ofs};
 
     /* Do stuff, populating ofs_it */
 
-    InputFileIterator input_file_end{};
+    std::istream_iterator<std::string> input_ifs_it{input_ifs};
+    std::istream_iterator<std::string> eos_it{};
 
-    std::for_each(input_file_iterator, input_file_end, 
+    std::for_each(input_ifs_it, eos_it, 
             [&](auto&& s) { map_f(s, emit_intermediate); }
     );
 
@@ -56,24 +58,27 @@ Worker::map_task(
 void
 Worker::reduce_task(
         UserReduceFunc reduce_f,
-        InputFileIterator intermediate_file_it,
-        OutputFileIterator output_file_it
+        std::ifstream& intermediate_ifs,
+        std::ofstream& output_ofs
 ) {
     /* Build intermediates map. */
 
     std::unordered_map<std::string, std::list<std::string>> intermediates;
 
-    InputFileIterator eos_it{};
+    std::istream_iterator<std::string> intermediate_ifs_it{intermediate_ifs};
+    std::istream_iterator<std::string> eos_it{};
 
-    for (; intermediate_file_it != eos_it; intermediate_file_it++) {
-        std::string ikey, ivalue;
-        parse_intermediate_entry(*intermediate_file_it, ikey, ivalue);
+    std::for_each(intermediate_ifs_it, eos_it,
+            [&intermediates](const auto& line){
+                std::string ikey, ivalue;
+                parse_intermediate_entry(line, ikey, ivalue);
 
-        intermediates[ikey].emplace_back(std::move(ivalue));
-    }
+                intermediates[ikey].emplace_back(std::move(ivalue));
+        }
+    );
 
     /* Run user reduce func on each key */
-    ResultEmitter emit{output_file_it};
+    ResultEmitter emit{output_ofs};
 
     const auto dispatch_reduce_f = [&](auto const& pair) { 
             reduce_f(pair.first, pair.second, emit);

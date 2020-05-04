@@ -3,6 +3,7 @@
 #include <sb-mapreduce/master.h>
 #include <sb-mapreduce/common.h>
 
+#include <memory>
 #include <string>
 #include <exception>
 #include <fstream>
@@ -83,6 +84,9 @@ void reduce_f(
     emit(res.str());
 };
 
+template<typename T>
+std::shared_ptr<T> make_shared_ptr_to_stack(T *e);
+
 }
 
 /*********************** main() ***********************************************/
@@ -97,18 +101,20 @@ int main() {
 
     // Create and run MapReduce::Master
     {
-        std::vector<MapReduce::InputFileIterator> inputs;
+        MapReduce::InputFileStreams inputs;
         std::ifstream preproc_ifs{preproc_file_path};
-        inputs.emplace_back(MapReduce::InputFileIterator{preproc_ifs});
+        inputs.emplace_back(std::move(preproc_ifs));
 
-        std::vector<MapReduce::OutputFileIterator> outputs;
+        MapReduce::OutputFileStreams outputs;
         std::ofstream output_ofs{output_file_path, 
                 std::ofstream::out | std::ofstream::trunc
         };
-        outputs.emplace_back(MapReduce::OutputFileIterator{output_ofs, "\n"});
+        outputs.emplace_back(std::move(output_ofs));
         
+        // Construct shared_ptr to stack variables with dummy "deleter"
         MapReduce::Master master{
-                inputs, outputs,
+                make_shared_ptr_to_stack<MapReduce::InputFileStreams>(&inputs),
+                make_shared_ptr_to_stack<MapReduce::OutputFileStreams>(&outputs),
                 map_f, reduce_f,
                 NUM_WORKERS,
                 intermediate_hash
@@ -170,6 +176,12 @@ std::string remove_punctuation(std::string s) {
     );
 
     return s;
+}
+
+template<typename T>
+std::shared_ptr<T> make_shared_ptr_to_stack(T *e) {
+    // Use dummy deleter that does nothing
+    return std::shared_ptr<T>{e, [](auto){}};
 }
 
 }

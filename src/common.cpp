@@ -42,7 +42,7 @@ void IntermediateEmitter::operator()(
 void ResultEmitter::operator()(
         const std::string resvalue
 ) {
-    *this->output_it++ = resvalue;
+    this->output_ofs << resvalue << std::endl;
 }
 
 }
