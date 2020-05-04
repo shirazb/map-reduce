@@ -39,6 +39,9 @@ const std::string output_file_name = "word_count.txt";
 const std::string output_file_path = output_data_dir_path + output_file_name;
 
 void
+run_mapreduce_job();
+
+void
 preprocess_input_file(
         const std::string input_file_path,
         const std::string preproc_file_path
@@ -75,29 +78,7 @@ int main() {
     preprocess_input_file(input_file_path, preproc_file_path);
     std::cout << std::endl;
 
-    // Create and run MapReduce::Master
-    {
-        MapReduce::InputFileStreams inputs;
-        std::ifstream preproc_ifs{preproc_file_path};
-        inputs.emplace_back(std::move(preproc_ifs));
-
-        MapReduce::OutputFileStreams outputs;
-        std::ofstream output_ofs{output_file_path, 
-                std::ofstream::out | std::ofstream::trunc
-        };
-        outputs.emplace_back(std::move(output_ofs));
-        
-        // Construct shared_ptr to stack variables with dummy "deleter"
-        MapReduce::Master master{
-                make_shared_ptr_to_stack<MapReduce::InputFileStreams>(&inputs),
-                make_shared_ptr_to_stack<MapReduce::OutputFileStreams>(&outputs),
-                map_f, reduce_f,
-                NUM_WORKERS,
-                intermediate_hash
-        };
-
-        master.go();
-    }
+    run_mapreduce_job();
 
     std::cout << std::endl;
     MapReduce::utils::log_file(output_file_path);
@@ -106,6 +87,30 @@ int main() {
 /*********************** helpers **********************************************/
 
 namespace {
+
+void
+run_mapreduce_job() {
+    std::ifstream preproc_ifs{preproc_file_path};
+    MapReduce::InputFileStreams inputs;
+    inputs.emplace_back(std::move(preproc_ifs));
+
+    std::ofstream output_ofs{output_file_path, 
+            std::ofstream::out | std::ofstream::trunc
+    };
+    MapReduce::OutputFileStreams outputs;
+    outputs.emplace_back(std::move(output_ofs));
+    
+    // Construct shared_ptr to stack variables with dummy "deleter"
+    MapReduce::Master master{
+            make_shared_ptr_to_stack<MapReduce::InputFileStreams>(&inputs),
+            make_shared_ptr_to_stack<MapReduce::OutputFileStreams>(&outputs),
+            map_f, reduce_f,
+            NUM_WORKERS,
+            intermediate_hash
+    };
+
+    master.go();
+}
 
 void
 preprocess_input_file(
