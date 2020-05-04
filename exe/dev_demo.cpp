@@ -97,8 +97,6 @@ int main() {
         };
 
         master.go();
-
-        std::cout << std::endl << std::endl << "Done master.go()!" << std::endl;
     }
 
     std::cout << std::endl;
