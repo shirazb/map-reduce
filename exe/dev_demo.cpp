@@ -9,10 +9,11 @@
 #include <iostream>
 #include <iterator>
 #include <filesystem>
+#include <sstream>
 
 using namespace shiraz;
 
-#define num_workers 10
+#define NUM_WORKERS 10
 
 /*********************** prototypes *******************************************/
 
@@ -21,8 +22,10 @@ namespace {
 // CWD must be map-reduce root in build dir.
 
 const std::string data_root_path = "data/";
+
+const std::string input_data_dir_path = data_root_path + "inputs/";
 const std::string input_file_name = "pg-being_ernest.txt";
-const std::string input_file_path = data_root_path + input_file_name;
+const std::string input_file_path = input_data_dir_path + input_file_name;
 
 const std::string temp_data_dir_path = data_root_path + "tmp/";
 const std::string preproc_files_prefix = "preprocessed_words_only_";
@@ -30,12 +33,55 @@ const std::string preproc_files_prefix = "preprocessed_words_only_";
 const std::string preproc_file_path = temp_data_dir_path + preproc_files_prefix
         + input_file_name;
 
+const std::string output_data_dir_path = data_root_path + "outputs/";
+const std::string output_file_name = "word_count.txt";
+const std::string output_file_path = output_data_dir_path + output_file_name;
+
 void preprocess_input_file(
         const std::string input_file_path,
         const std::string preproc_file_path
 );
 
 std::string remove_punctuation(std::string s);
+
+
+const auto map_f = [](std::string k, MapReduce::IntermediateEmitter& emit) {
+    emit(k, std::to_string(1));
+};
+
+const auto intermediate_hash = [](int k){ return k % NUM_WORKERS; };
+
+void reduce_f(
+        std::string ikey,
+        std::list<std::string> ivalues,
+        MapReduce::ResultEmitter& emit
+) {
+    int acc = 0;
+    for (auto &iv: ivalues) {
+        try {
+
+            acc += std::stoi(iv);
+
+        } catch (std::invalid_argument& ex) {
+            std::cout << "reduce_f(): For key '" << ikey << "' could not parse "
+                    << "value: " << iv << std::endl
+                    << "    Threw std::invalid_argument: " << std::endl
+                    << "    " << ex.what();
+            continue;
+        } catch (std::out_of_range& ex) {
+            std::cout << "reduce_f(): For key '" << ikey << "' could not parse "
+                    << "value: " << iv << std::endl
+                    << "    Threw std::out_of_range: " << std::endl
+                    << "    " << ex.what();
+            continue;
+        }
+    }
+
+    std::ostringstream res;
+    res << "(" << ikey << ", " << acc << ")";    
+
+    emit(res.str());
+};
 
 }
 
@@ -53,19 +99,18 @@ int main() {
 
     std::vector<MapReduce::InputFileIterator> inputs;
     std::ifstream preproc_ifs{preproc_file_path};
-    inputs.push_back(MapReduce::InputFileIterator{preproc_ifs});
+    inputs.emplace_back(MapReduce::InputFileIterator{preproc_ifs});
 
     std::vector<MapReduce::OutputFileIterator> outputs;
-
-    auto map_f = [](std::string k, MapReduce::IntermediateEmitter& emit) {
-             emit(k, k + "-value");
+    std::ofstream output_ofs{output_file_path, 
+            std::ofstream::out | std::ofstream::trunc
     };
-    auto intermediate_hash = [](int k){ return k % num_workers; };
-
+    outputs.emplace_back(MapReduce::OutputFileIterator{output_ofs, "\n"});
+    
     MapReduce::Master master{
             inputs, outputs,
-            map_f,
-            num_workers,
+            map_f, reduce_f,
+            NUM_WORKERS,
             intermediate_hash
     };
 
@@ -95,6 +140,9 @@ void preprocess_input_file(
                 "Could not open input file for reading: " + input_file_path
         );
     }
+
+    // Create preproc tmp dir if not exists.
+    std::filesystem::create_directory(temp_data_dir_path);
 
     std::ofstream ofs{preproc_file_path};
     if (!ofs) {

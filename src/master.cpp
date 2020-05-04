@@ -13,12 +13,14 @@ Master::Master(
         std::vector<InputFileIterator> input_file_iterators,
         std::vector<OutputFileIterator> output_file_iterators,
         UserMapFunc map_f,
+        UserReduceFunc reduce_f,
         int num_workers,
         IntermediateHashFunc intermediate_hash
 ) :
         input_file_iterators{std::move(input_file_iterators)},
         output_file_iterators{std::move(output_file_iterators)},
         map_f{map_f},
+        reduce_f{reduce_f},
         num_workers{num_workers},
         intermediate_hash{intermediate_hash}
 {
@@ -84,7 +86,39 @@ void Master::go() {
 
     /* Reduce Stage */
 
-    utils::log_file(intermediate_file_paths.at(0));
+    int cur_output_file_idx = 0;
+    auto cur_output_file_it = this->output_file_iterators.begin();
+    auto output_file_end_it = this->output_file_iterators.end();
+
+    while (cur_output_file_it != output_file_end_it) {
+        while (!free_workers.empty() && cur_output_file_it != output_file_end_it) {
+            Worker w = free_workers.extract(
+                    free_workers.begin()
+            ).value();
+
+            // TODO: For now, we just take 1 intermediate file instead of R.
+            std::ifstream inter_ifs{intermediate_file_paths[cur_output_file_idx]};
+            std::istream_iterator<std::string> inter_it{inter_ifs};
+
+            w.reduce_task(reduce_f, inter_ifs, *cur_output_file_it);
+
+            busy_workers.emplace(std::move(w));
+
+            ++cur_output_file_it;
+            ++cur_output_file_idx;
+        }
+    }
+
+    free_workers.merge(busy_workers);
+
+    /* Cleanup */
+
+    // TODO: RAII-ify the intermediate file resource. Also, consider who should 
+    // delete / have ownership.
+
+    std::for_each(intermediate_file_paths.begin(), intermediate_file_paths.end(),
+            [](auto& fp) { std::filesystem::remove(fp); }
+    );
 }
 
 Master::NotEnoughWorkersException::NotEnoughWorkersException(

@@ -17,6 +17,7 @@ public:
             std::vector<InputFileIterator> input_file_iterators,
             std::vector<OutputFileIterator> output_file_iterators,
             UserMapFunc map_f,
+            UserReduceFunc reduce_f,
             int num_workers,
             IntermediateHashFunc intermediate_hash
     );
@@ -37,7 +38,7 @@ private:
     std::vector<OutputFileIterator> output_file_iterators; // size R
 
     UserMapFunc map_f;
-    //UserReduceFunc
+    UserReduceFunc reduce_f;
 
     int num_workers;
 
