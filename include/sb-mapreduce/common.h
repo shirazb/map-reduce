@@ -2,6 +2,7 @@
 
 #include <string>
 #include <fstream>
+#include <list>
 
 namespace shiraz::MapReduce::utils {
 
@@ -45,7 +46,7 @@ using InputFileIterator = std::istream_iterator<std::string>;
 using OutputFileIterator = std::ostream_iterator<std::string>;
 
 using UserMapFunc = void(*)(std::string, IntermediateEmitter&);
-using UserReduceFunc = void(*)(std::string, std::string, ResultEmitter&);
+using UserReduceFunc = void(*)(std::string, std::list<std::string>, ResultEmitter&);
 
 using IntermediateHashFunc = int(*)(int);
 
