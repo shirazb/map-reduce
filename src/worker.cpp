@@ -86,6 +86,10 @@ Worker::reduce_task(
 
 namespace {
 
+/**
+ * Precond: `s` is of form "k,v\n". That is, with NO spacing around the comma
+ * and a newline character at the end.
+ */
 void
 parse_intermediate_entry(
         const std::string s,
