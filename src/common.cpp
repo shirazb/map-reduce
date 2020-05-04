@@ -18,6 +18,8 @@ void log_file(
         );
     }
 
+    std::cout << "log_file(): " << file_path << std::endl;
+    
     for (int i = 0; i < num_words; i++) {
         std::string word;
         ifs >> word;
