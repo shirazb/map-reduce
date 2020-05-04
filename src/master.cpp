@@ -45,41 +45,21 @@ void Master::go() {
         free_workers.emplace(Worker{i});
     }
 
+    /* Map Stage */
+
     const auto intermediate_file_paths = this->map_stage(
             free_workers, busy_workers
     );
 
     /* Reduce Stage */
 
-    int cur_output_file_idx = 0;
-    auto cur_output_file_it = this->output_file_iterators.begin();
-    auto output_file_end_it = this->output_file_iterators.end();
-
-    while (cur_output_file_it != output_file_end_it) {
-        while (!free_workers.empty() && cur_output_file_it != output_file_end_it) {
-            Worker w = free_workers.extract(
-                    free_workers.begin()
-            ).value();
-
-            // TODO: For now, we just take 1 intermediate file instead of R.
-            std::ifstream inter_ifs{intermediate_file_paths[cur_output_file_idx]};
-            std::istream_iterator<std::string> inter_it{inter_ifs};
-
-            w.reduce_task(reduce_f, inter_ifs, *cur_output_file_it);
-
-            busy_workers.emplace(std::move(w));
-
-            ++cur_output_file_it;
-            ++cur_output_file_idx;
-        }
-    }
-
-    free_workers.merge(busy_workers);
+    this->reduce_stage(free_workers, busy_workers, intermediate_file_paths);
 
     /* Cleanup */
 
     // TODO: RAII-ify the intermediate file resource. Also, consider who should 
-    // delete / have ownership.
+    // delete / have ownership. This cleanup should be automatic in the
+    // destructor of a resource handle.
 
     std::for_each(intermediate_file_paths.begin(), intermediate_file_paths.end(),
             [](auto& fp) { std::filesystem::remove(fp); }
@@ -95,12 +75,8 @@ Master::map_stage(
         std::unordered_set<Worker, Worker::Hash>& free_workers,
         std::unordered_set<Worker, Worker::Hash>& busy_workers
 ) {
-    /* Store intermediate output paths returned by map so we can forward to
-       reduce */
-    
+    // Store and return for reduce stage later.    
     std::vector<std::string> intermediate_file_paths;
-
-    /* Map Stage */
 
     // Iterator of file stream iterators
     auto cur_ifstream_it_it = this->input_file_iterators.begin();
@@ -119,9 +95,7 @@ Master::map_stage(
             ).value();
 
             intermediate_file_paths.emplace_back(
-                    w.map_task(
-                        this->map_f, *cur_ifstream_it_it
-                    )
+                    w.map_task(this->map_f, *cur_ifstream_it_it)
             );
 
             busy_workers.emplace(std::move(w));
@@ -135,6 +109,42 @@ Master::map_stage(
     free_workers.merge(busy_workers);
 
     return intermediate_file_paths;
+}
+
+/**
+ * Invariant: All workers are free before and after this function.
+ * Return the vector of intermediate file paths produced by the map tasks.
+ */
+void
+Master::reduce_stage(
+        std::unordered_set<Worker, Worker::Hash>& free_workers,
+        std::unordered_set<Worker, Worker::Hash>& busy_workers,
+        std::vector<std::string> intermediate_file_paths
+) {
+    int cur_output_file_idx = 0;
+    auto cur_output_file_it = this->output_file_iterators.begin();
+    auto output_file_end_it = this->output_file_iterators.end();
+
+    while (cur_output_file_it != output_file_end_it) {
+        while (!free_workers.empty() && cur_output_file_it != output_file_end_it) {
+            Worker w = free_workers.extract(
+                    free_workers.begin()
+            ).value();
+
+            // TODO: For now, we just take 1 intermediate file instead of R.
+            std::ifstream inter_ifs{intermediate_file_paths[cur_output_file_idx]};
+            std::istream_iterator<std::string> inter_it{inter_ifs};
+
+            w.reduce_task(this->reduce_f, inter_ifs, *cur_output_file_it);
+
+            busy_workers.emplace(std::move(w));
+
+            ++cur_output_file_it;
+            ++cur_output_file_idx;
+        }
+    }
+
+    free_workers.merge(busy_workers);
 }
 
 Master::NotEnoughWorkersException::NotEnoughWorkersException(
