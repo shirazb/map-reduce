@@ -56,33 +56,7 @@ void reduce_f(
         std::string ikey,
         std::list<std::string> ivalues,
         MapReduce::ResultEmitter& emit
-) {
-    int acc = 0;
-    for (auto &iv: ivalues) {
-        try {
-
-            acc += std::stoi(iv);
-
-        } catch (std::invalid_argument& ex) {
-            std::cout << "reduce_f(): For key '" << ikey << "' could not parse "
-                    << "value: " << iv << std::endl
-                    << "    Threw std::invalid_argument: " << std::endl
-                    << "    " << ex.what();
-            continue;
-        } catch (std::out_of_range& ex) {
-            std::cout << "reduce_f(): For key '" << ikey << "' could not parse "
-                    << "value: " << iv << std::endl
-                    << "    Threw std::out_of_range: " << std::endl
-                    << "    " << ex.what();
-            continue;
-        }
-    }
-
-    std::ostringstream res;
-    res << "(" << ikey << "," << acc << ")";    
-
-    emit(res.str());
-};
+);
 
 template<typename T>
 std::shared_ptr<T> make_shared_ptr_to_stack(T *e);
@@ -176,6 +150,38 @@ std::string remove_punctuation(std::string s) {
     );
 
     return s;
+}
+
+void reduce_f(
+        std::string ikey,
+        std::list<std::string> ivalues,
+        MapReduce::ResultEmitter& emit
+) {
+    int acc = 0;
+    for (auto &iv: ivalues) {
+        try {
+
+            acc += std::stoi(iv);
+
+        } catch (std::invalid_argument& ex) {
+            std::cout << "reduce_f(): For key '" << ikey << "' could not parse "
+                    << "value: " << iv << std::endl
+                    << "    Threw std::invalid_argument: " << std::endl
+                    << "    " << ex.what();
+            continue;
+        } catch (std::out_of_range& ex) {
+            std::cout << "reduce_f(): For key '" << ikey << "' could not parse "
+                    << "value: " << iv << std::endl
+                    << "    Threw std::out_of_range: " << std::endl
+                    << "    " << ex.what();
+            continue;
+        }
+    }
+
+    std::ostringstream res;
+    res << "(" << ikey << "," << acc << ")";    
+
+    emit(res.str());
 }
 
 template<typename T>
