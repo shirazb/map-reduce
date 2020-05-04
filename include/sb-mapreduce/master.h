@@ -1,6 +1,7 @@
 // Maintainer: Shiraz Butt (shiraz.b@icloud.com).
 #pragma once
 
+#include <sb-mapreduce/worker.h>
 #include <sb-mapreduce/common.h>
 
 #include <iterator>
@@ -8,6 +9,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <unordered_set>
 
 namespace shiraz::MapReduce {
 
@@ -43,6 +45,12 @@ private:
     int num_workers;
 
     IntermediateHashFunc intermediate_hash;
+
+    std::vector<std::string>
+    map_stage(
+            std::unordered_set<Worker, Worker::Hash>& free_workers,
+            std::unordered_set<Worker, Worker::Hash>& busy_workers
+    );
 };
 
 struct Master::NotEnoughWorkersException: std::invalid_argument {
