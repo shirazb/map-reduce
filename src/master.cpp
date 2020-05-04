@@ -13,12 +13,14 @@ Master::Master(
         std::vector<InputFileIterator> input_file_iterators,
         std::vector<OutputFileIterator> output_file_iterators,
         UserMapFunc map_f,
+        UserReduceFunc reduce_f,
         int num_workers,
         IntermediateHashFunc intermediate_hash
 ) :
         input_file_iterators{std::move(input_file_iterators)},
         output_file_iterators{std::move(output_file_iterators)},
         map_f{map_f},
+        reduce_f{reduce_f},
         num_workers{num_workers},
         intermediate_hash{intermediate_hash}
 {

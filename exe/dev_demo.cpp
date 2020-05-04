@@ -99,7 +99,7 @@ int main() {
 
     MapReduce::Master master{
             inputs, outputs,
-            map_f,
+            map_f, reduce_f,
             NUM_WORKERS,
             intermediate_hash
     };
