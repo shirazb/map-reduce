@@ -99,10 +99,14 @@ int main() {
 
     std::vector<MapReduce::InputFileIterator> inputs;
     std::ifstream preproc_ifs{preproc_file_path};
-    inputs.push_back(MapReduce::InputFileIterator{preproc_ifs});
+    inputs.emplace_back(MapReduce::InputFileIterator{preproc_ifs});
 
     std::vector<MapReduce::OutputFileIterator> outputs;
-
+    std::ofstream output_ofs{output_file_path, 
+            std::ofstream::out | std::ofstream::trunc
+    };
+    outputs.emplace_back(MapReduce::OutputFileIterator{output_ofs, "\n"});
+    
     MapReduce::Master master{
             inputs, outputs,
             map_f, reduce_f,
@@ -136,6 +140,9 @@ void preprocess_input_file(
                 "Could not open input file for reading: " + input_file_path
         );
     }
+
+    // Create preproc tmp dir if not exists.
+    std::filesystem::create_directory(temp_data_dir_path);
 
     std::ofstream ofs{preproc_file_path};
     if (!ofs) {
