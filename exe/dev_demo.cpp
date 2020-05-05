@@ -54,14 +54,13 @@ preprocess_input_file(
 std::string
 remove_punctuation(std::string s);
 
-
-const auto map_f = [](std::string k, MapReduce::IntermediateEmitter& emit) {
-    emit(k, std::to_string(1));
-};
+void
+map_f(std::ifstream& ifs, MapReduce::IntermediateEmitter& emit);
 
 const auto intermediate_hash = [](int k){ return k % NUM_WORKERS; };
 
-void reduce_f(
+void
+reduce_f(
         std::string ikey,
         std::list<std::string> ivalues,
         MapReduce::ResultEmitter& emit
@@ -161,6 +160,13 @@ remove_punctuation(std::string s) {
     );
 
     return s;
+}
+
+void
+map_f(std::ifstream& ifs, MapReduce::IntermediateEmitter& emit) {
+    for (std::string s; ifs >> s; ) {
+        emit(s, std::to_string(1));
+    }
 }
 
 void
