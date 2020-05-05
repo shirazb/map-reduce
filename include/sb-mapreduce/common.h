@@ -14,7 +14,7 @@ struct ResultEmitter;
 using InputFileStreams = std::vector<std::ifstream>;
 using OutputFileStreams = std::vector<std::ofstream>;
 
-using UserMapFunc = void(*)(std::string, IntermediateEmitter&);
+using UserMapFunc = void(*)(std::ifstream&, IntermediateEmitter&);
 using UserReduceFunc = void(*)(std::string, std::list<std::string>, ResultEmitter&);
 
 using IntermediateHashFunc = int(*)(int);

@@ -44,14 +44,9 @@ Worker::map_task(
     };
     IntermediateEmitter emit_intermediate{intermediate_ofs};
 
-    /* Do stuff, populating ofs_it */
+    /* Do stuff, writing to ofs. */
 
-    std::istream_iterator<std::string> input_ifs_it{input_ifs};
-    std::istream_iterator<std::string> eos_it{};
-
-    std::for_each(input_ifs_it, eos_it, 
-            [&](auto&& s) { map_f(s, emit_intermediate); }
-    );
+    map_f(input_ifs, emit_intermediate);
 
     return intermediate_file_path;
 }
