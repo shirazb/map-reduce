@@ -22,14 +22,14 @@ public:
     std::string
     map_task(
             UserMapFunc map_f,
-            std::ifstream& input_ifs
+            const std::string& input_fp
     );
 
     void
     reduce_task(
             UserReduceFunc reduce_f,
-            std::ifstream& intermediate_ifs, 
-            std::ofstream& output_ofs
+            const std::string& intermediate_fp,
+            const std::string& output_fp
     );
 
     struct Hash {

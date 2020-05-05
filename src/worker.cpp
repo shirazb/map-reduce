@@ -26,23 +26,18 @@ namespace shiraz::MapReduce {
 std::string
 Worker::map_task(
         UserMapFunc map_f,
-        std::ifstream& input_ifs
+        const std::string& input_fp
 ) {
-    /* Intermediate output file stream iterator */
+    /* Input input file stream */
+    std::ifstream input_ifs{input_fp};
+
+    /* Intermediate output file stream  */
     
     // NB: temp_directory_path() not thread-safe
     const std::string intermediate_file_dir = std::filesystem::temp_directory_path();
     const std::string intermediate_file_path = intermediate_file_dir + 
             "/sb-mapreduce-intermediate-output--worker-" + 
             std::to_string(this->id);
-
-    // TODO: Handle opening error.
-    // Create IntermediateEmitter function passed to user map_f that will
-    // stream output to file.
-//     std::ofstream intermediate_ofs{intermediate_file_path,
-//             std::ofstream::out | std::ofstream::trunc
-//     };
-//     IntermediateEmitter emit_intermediate{intermediate_ofs};
 
     EmitIntermediateStream emit_intermediate_s{intermediate_file_path,
                 std::ofstream::out | std::ofstream::trunc
@@ -58,13 +53,15 @@ Worker::map_task(
 void
 Worker::reduce_task(
         UserReduceFunc reduce_f,
-        std::ifstream& intermediate_ifs,
-        std::ofstream& output_ofs
+        const std::string& intermediate_fp,
+        const std::string& output_fp
 ) {
     /* Build intermediates map. */
 
     std::unordered_map<std::string, std::list<std::string>> intermediates;
 
+    // Construct iterator of intermediate file.
+    std::ifstream intermediate_ifs{intermediate_fp};
     std::istream_iterator<std::string> intermediate_ifs_it{intermediate_ifs};
     std::istream_iterator<std::string> eos_it{};
 
@@ -81,7 +78,9 @@ Worker::reduce_task(
 
     // TODO: Very bad. Refactor such that Master takes input/output file paths,
     // not fstreams, and passes them to the worker which constructs its own streams.
-    EmitResultStream& emit_s = (EmitResultStream&) output_ofs;
+    EmitResultStream emit_s{output_fp,
+            EmitResultStream::out | EmitResultStream::trunc
+    };
 
     const auto dispatch_reduce_f = [&](auto const& pair) { 
             reduce_f(pair.first, pair.second, emit_s);
