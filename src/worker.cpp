@@ -19,6 +19,10 @@ parse_intermediate_entry(
     std::string& ikey,
     std::string& ivalue
 );
+
+struct inter_file;
+struct user_file;
+
 }
 
 namespace shiraz::MapReduce {
@@ -89,7 +93,74 @@ Worker::reduce_task(
     std::for_each(intermediates.begin(), intermediates.end(), dispatch_reduce_f);
 }
 
+/**
+ * S models a derived type of `open_file_type`.
+ * ...Param_ifs are types of parameters to std::ifstream after first (string 
+ * filepath) parameter.
+ * 
+ * Tries to open a std::ifstream on a file using the provided arguments, which
+ * are passed directly to the std::ifstream constructor.
+ * 
+ * `fp`: Filepath to open.
+ * `args...` remaining arguments to std::ifstream constructor (optional).
+ * 
+ * Depending on `S`, on failure will throw the appropriate exception. That is,
+ * depending on whether or not we are opening a user-provided file path or an
+ * internally generated intermediate file path.
+ */
+template<typename S, typename ...Params_ifs>
+std::ifstream
+Worker::try_open_file_or_throw(const std::string& fp, Params_ifs... args, ...) {
+    std::ifstream ifs(fp, args...);
+    if (!ifs) {
+        // See `struct open_file_type` for `exception_type` description.
+        throw typename S::exception_type{
+            std::to_string(this->id), fp
+        };
+    }
+
+    return ifs;
+}
+
+Worker::FailedToOpenUserFileException::FailedToOpenUserFileException(
+        const std::string& who,
+        const std::string& fp
+) : 
+        std::invalid_argument(build_error_str(who, fp)) {}
+
+std::string
+Worker::FailedToOpenUserFileException::build_error_str(
+        const std::string& who,
+        const std::string& fp
+) {
+    std::ostringstream ss;
+    ss << "shiraz::MapReduce: Worker `" << who << "` failed to read user-" << 
+            "provided file `" << fp << "`.";
+    return ss.str();
+}
+
+Worker::FailedToOpenIntermediateFileException::FailedToOpenIntermediateFileException(
+        const std::string& who,
+        const std::string& fp
+) :
+        std::logic_error(build_error_str(who, fp)) {}
+
+std::string
+Worker::FailedToOpenIntermediateFileException::build_error_str(
+        const std::string& who,
+        const std::string& fp
+) {
+    std::ostringstream ss;
+    ss << "shiraz::MapReduce INTERNAL ERROR (please report): " <<
+            "Worker `" << who << "` failed to read intermediate file `" <<
+            fp << "`.";
+    return ss.str();
+}
+
 } // namespace shiraz::MapReduce
+
+
+using namespace shiraz::MapReduce;
 
 namespace {
 
@@ -108,5 +179,24 @@ parse_intermediate_entry(
     std::getline(ss, ikey, ',');
     std::getline(ss, ivalue);
 }
+
+
+/**
+ * For use by try_open_file_or_throw
+ * 
+ * Must declare an `exception_type` type that is an exception. The constructor
+ * of this exception will have the following signature:
+ * 
+ *     exception_type(const std::string& who, const std::string& fp)
+ * 
+ * where `who` describes the worker who has failed to open a file stream; and
+ * `fp` is the file path that it failed to open.
+ */
+struct inter_file {
+    using exception_type = Worker::FailedToOpenIntermediateFileException;
+};
+struct user_file {
+    using exception_type = Worker::FailedToOpenUserFileException;
+};
 
 }

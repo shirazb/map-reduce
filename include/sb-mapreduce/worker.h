@@ -42,10 +42,40 @@ public:
         return this->id == w.id;
     }
 
+    struct FailedToOpenUserFileException;
+    struct FailedToOpenIntermediateFileException;
+
 private:
     int id;
+
+    template<typename S, typename ...Params_ifs>
+    std::ifstream
+    try_open_file_or_throw(
+            const std::string& fp,
+            Params_ifs... args, ...
+    );
 };
 
+struct Worker::FailedToOpenUserFileException: public std::invalid_argument {
+    FailedToOpenUserFileException(const std::string& who, const std::string& fp);
+
+private:
+    static
+    std::string
+    build_error_str(const std::string& who, const std::string& fp);
+};
+
+struct Worker::FailedToOpenIntermediateFileException: public std::logic_error {
+    FailedToOpenIntermediateFileException(
+            const std::string& who,
+            const std::string& fp
+    );
+
+private:
+    static
+    std::string
+    build_error_str(const std::string& who, const std::string& fp);
+};
 
 
 } // namespace shiraz::MapReduce
