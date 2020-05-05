@@ -39,14 +39,18 @@ Worker::map_task(
     // TODO: Handle opening error.
     // Create IntermediateEmitter function passed to user map_f that will
     // stream output to file.
-    std::ofstream intermediate_ofs{intermediate_file_path,
-            std::ofstream::out | std::ofstream::trunc
+//     std::ofstream intermediate_ofs{intermediate_file_path,
+//             std::ofstream::out | std::ofstream::trunc
+//     };
+//     IntermediateEmitter emit_intermediate{intermediate_ofs};
+
+    EmitIntermediateStream emit_intermediate_s{intermediate_file_path,
+                std::ofstream::out | std::ofstream::trunc
     };
-    IntermediateEmitter emit_intermediate{intermediate_ofs};
 
     /* Do stuff, writing to ofs. */
 
-    map_f(input_ifs, emit_intermediate);
+    map_f(input_ifs, emit_intermediate_s);
 
     return intermediate_file_path;
 }
@@ -74,10 +78,13 @@ Worker::reduce_task(
     );
 
     /* Run user reduce func on each key */
-    ResultEmitter emit{output_ofs};
+
+    // TODO: Very bad. Refactor such that Master takes input/output file paths,
+    // not fstreams, and passes them to the worker which constructs its own streams.
+    EmitResultStream& emit_s = (EmitResultStream&) output_ofs;
 
     const auto dispatch_reduce_f = [&](auto const& pair) { 
-            reduce_f(pair.first, pair.second, emit);
+            reduce_f(pair.first, pair.second, emit_s);
     };
 
     std::for_each(intermediates.begin(), intermediates.end(), dispatch_reduce_f);

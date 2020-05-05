@@ -30,22 +30,3 @@ log_file(
 }
 
 }
-
-namespace shiraz::MapReduce {
-
-void
-IntermediateEmitter::operator()(
-        const std::string ikey, 
-        const std::string ivalue
-) {
-    this->intermediate_ofs << ikey << "," << ivalue << std::endl;
-}
-
-void
-ResultEmitter::operator()(
-        const std::string resvalue
-) {
-    this->output_ofs << resvalue << std::endl;
-}
-
-}
