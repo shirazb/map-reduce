@@ -55,7 +55,7 @@ std::string
 remove_punctuation(std::string s);
 
 void
-map_f(std::ifstream& ifs, MapReduce::IntermediateEmitter& emit);
+map_f(std::ifstream& ifs, MapReduce::EmitIntermediateStream& emit);
 
 const auto intermediate_hash = [](int k){ return k % NUM_WORKERS; };
 
@@ -63,7 +63,7 @@ void
 reduce_f(
         std::string ikey,
         std::list<std::string> ivalues,
-        MapReduce::ResultEmitter& emit
+        MapReduce::EmitResultStream& emit
 );
 
 template<typename T>
@@ -163,17 +163,31 @@ remove_punctuation(std::string s) {
 }
 
 void
-map_f(std::ifstream& ifs, MapReduce::IntermediateEmitter& emit) {
+map_f(std::ifstream& ifs, MapReduce::EmitIntermediateStream& emit) {
     for (std::string s; ifs >> s; ) {
-        emit(s, std::to_string(1));
+        emit << MapReduce::IntermediateResult<std::string, int>{s, 1};
     }
+
+    /*
+    Example using iterator of IntermediateResult over the stream.
+
+    std::istream_iterator<std::string> ifs_it{ifs};
+    const std::istream_iterator<std::string> eos_it{};
+
+    auto emit_it = emit.begin<std::string, int>();
+
+    std::transform(ifs_it, eos_it, emit_it, [](auto& s){ 
+            return MapReduce::IntermediateResult<std::string, int>{s, 1};
+    });
+
+    */
 }
 
 void
 reduce_f(
         std::string ikey,
         std::list<std::string> ivalues,
-        MapReduce::ResultEmitter& emit
+        MapReduce::EmitResultStream& emit
 ) {
     int acc = 0;
     for (auto &iv: ivalues) {
@@ -199,7 +213,7 @@ reduce_f(
     std::ostringstream res;
     res << "(" << ikey << "," << acc << ")";    
 
-    emit(res.str());
+    emit << res.str() << std::endl;
 }
 
 template<typename T>
