@@ -11,8 +11,8 @@ namespace shiraz::MapReduce {
 class EmitIntermediateStream;
 class EmitResultStream;
 
-using InputFileStreams = std::vector<std::ifstream>;
-using OutputFileStreams = std::vector<std::ofstream>;
+using InputFilePaths = std::vector<std::string>;
+using OutputFilePaths = std::vector<std::string>;
 
 using UserMapFunc = void(*)(std::ifstream&, EmitIntermediateStream&);
 using UserReduceFunc = void(*)(std::string, std::list<std::string>, EmitResultStream&);
@@ -62,7 +62,7 @@ namespace utils {
 
 void
 log_file(
-        const std::string file_path,
+        const std::string& file_path,
         int num_words = 30,
         char get_line_delim = '\n'
 );
