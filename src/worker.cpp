@@ -22,7 +22,6 @@ parse_intermediate_entry(
 
 struct inter_file;
 struct user_file;
-
 }
 
 namespace shiraz::MapReduce {
@@ -33,7 +32,7 @@ Worker::map_task(
         const std::string& input_fp
 ) {
     /* Input input file stream */
-    std::ifstream input_ifs{input_fp};
+    auto input_ifs = this->try_open_file_or_throw<std::ifstream, user_file>(input_fp);
 
     /* Intermediate output file stream  */
     
@@ -43,9 +42,9 @@ Worker::map_task(
             "/sb-mapreduce-intermediate-output--worker-" + 
             std::to_string(this->id);
 
-    EmitIntermediateStream emit_intermediate_s{intermediate_file_path,
-                std::ofstream::out | std::ofstream::trunc
-    };
+    auto emit_intermediate_s = this->try_open_file_or_throw<EmitIntermediateStream, inter_file>(
+            intermediate_file_path
+    );
 
     /* Do stuff, writing to ofs. */
 
@@ -65,7 +64,9 @@ Worker::reduce_task(
     std::unordered_map<std::string, std::list<std::string>> intermediates;
 
     // Construct iterator of intermediate file.
-    std::ifstream intermediate_ifs{intermediate_fp};
+    auto intermediate_ifs = try_open_file_or_throw<std::ifstream, inter_file>(
+            intermediate_fp
+    );
     std::istream_iterator<std::string> intermediate_ifs_it{intermediate_ifs};
     std::istream_iterator<std::string> eos_it{};
 
@@ -80,11 +81,12 @@ Worker::reduce_task(
 
     /* Run user reduce func on each key */
 
-    // TODO: Very bad. Refactor such that Master takes input/output file paths,
-    // not fstreams, and passes them to the worker which constructs its own streams.
-    EmitResultStream emit_s{output_fp,
-            EmitResultStream::out | EmitResultStream::trunc
-    };
+    // TODO: Inconsistent level of abstraction that we specify open mode here
+    // but not for EmitIntermediateStream.
+    auto emit_s = try_open_file_or_throw<EmitResultStream, user_file>(
+            output_fp,
+            std::ofstream::out | std::ofstream::trunc
+    );
 
     const auto dispatch_reduce_f = [&](auto const& pair) { 
             reduce_f(pair.first, pair.second, emit_s);
@@ -95,6 +97,7 @@ Worker::reduce_task(
 
 /**
  * S models a derived type of `open_file_type`.
+ * T_fstream models the type of std::fstream to open, e.g. std::ifstream.
  * ...Param_ifs are types of parameters to std::ifstream after first (string 
  * filepath) parameter.
  * 
@@ -108,18 +111,18 @@ Worker::reduce_task(
  * depending on whether or not we are opening a user-provided file path or an
  * internally generated intermediate file path.
  */
-template<typename S, typename ...Params_ifs>
-std::ifstream
+template<typename T_fstream, typename S, typename ...Params_ifs>
+T_fstream
 Worker::try_open_file_or_throw(const std::string& fp, Params_ifs... args, ...) {
-    std::ifstream ifs(fp, args...);
-    if (!ifs) {
+    T_fstream fs(fp, args...);
+    if (!fs) {
         // See `struct open_file_type` for `exception_type` description.
         throw typename S::exception_type{
             std::to_string(this->id), fp
         };
     }
 
-    return ifs;
+    return fs;
 }
 
 Worker::FailedToOpenUserFileException::FailedToOpenUserFileException(

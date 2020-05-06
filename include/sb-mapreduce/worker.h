@@ -48,8 +48,8 @@ public:
 private:
     int id;
 
-    template<typename S, typename ...Params_ifs>
-    std::ifstream
+    template<typename T_fstream, typename S, typename ...Params_ifs>
+    T_fstream
     try_open_file_or_throw(
             const std::string& fp,
             Params_ifs... args, ...
