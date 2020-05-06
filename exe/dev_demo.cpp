@@ -93,11 +93,11 @@ namespace {
 
 void
 run_mapreduce_job() {
-    MapReduce::InputFilePaths inputs{1};
-    inputs.emplace_back(std::move(preproc_file_path));
+    MapReduce::InputFilePaths inputs;
+    inputs.emplace_back(preproc_file_path);
 
-    MapReduce::OutputFilePaths outputs{1};
-    outputs.emplace_back(std::move(output_file_path));
+    MapReduce::OutputFilePaths outputs;
+    outputs.emplace_back(output_file_path);
     
     // Construct shared_ptr to stack variables with dummy "deleter"
     MapReduce::Master master{
