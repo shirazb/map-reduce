@@ -1,6 +1,7 @@
 // Maintainer: Shiraz Butt (shiraz.b@icloud.com).
 #include <sb-mapreduce/worker.h>
 #include <sb-mapreduce/common.h>
+#include <sb-mapreduce/emit-streams.h>
 
 #include <iterator>
 #include <fstream>
@@ -27,6 +28,7 @@ namespace shiraz::MapReduce {
 
 std::string
 Worker::map_task(
+        const int map_task_no,
         UserMapFunc map_f,
         const std::string& input_fp,
         IntermediateHashFunc hash_inter
@@ -34,24 +36,29 @@ Worker::map_task(
     /* Input input file stream */
     auto input_ifs = this->try_open_file_or_throw<std::ifstream, user_file>(input_fp);
 
-    /* Intermediate output file stream  */
-    
-    // NB: temp_directory_path() not thread-safe
-    const std::string intermediate_file_dir = std::filesystem::temp_directory_path();
-    const std::string intermediate_file_path = intermediate_file_dir + 
-            "/sb-mapreduce-intermediate-output--worker-" + 
-            std::to_string(this->id);
+    /* Create emitter from R intermediate output file streams */
 
-    auto emit_intermediate_s = this->try_open_file_or_throw<EmitIntermediateStream, inter_file>(
-            intermediate_file_path
-    );
+    const int R = this->num_reduce_tasks;
+    const int m = map_task_no;
+
+    std::vector<std::ofstream> inter_ofs;
+    std::vector<std::string> inter_fps;
+
+    for (int r = 0; r < R; r++) {
+        const auto fp = this->get_intermediate_fp(m ,r);
+        inter_ofs.emplace_back(
+                this->try_open_file_or_throw<std::ofstream, inter_file>(fp)
+        );
+        inter_fps.push_back(fp);
+    }
+
+    EmitIntermediateStream emit_s{hash_inter, std::move(inter_ofs)};
 
     /* Do stuff, writing to ofs. */
 
-    map_f(input_ifs, emit_intermediate_s);
+    map_f(input_ifs, emit_s);
 
-    // Cast away const-ness to allow automatic move.
-    return (std::string) intermediate_file_path;
+    return inter_fps;
 }
 
 void
@@ -124,6 +131,17 @@ Worker::try_open_file_or_throw(const std::string& fp, Params_ifs... args, ...) {
     }
 
     return fs;
+}
+
+std::string
+Worker::get_intermediate_fp(const int m, const int r) {
+    // NB: temp_directory_path() not thread-safe
+    static const std::string intermediate_file_dir =
+            std::filesystem::temp_directory_path();
+
+    return intermediate_file_dir + "/sb-mapreduce-intermediate-output-worker-"
+            + std::to_string(this->id) + "--bucket-"
+            + std::to_string(m) + "-" + std::to_string(r);
 }
 
 Worker::FailedToOpenUserFileException::FailedToOpenUserFileException(

@@ -26,8 +26,9 @@ public:
     Worker(Worker&& w) =default;
     Worker& operator=(Worker&& w) =default;
 
-    std::string
+    std::vector<std::string>
     map_task(
+            const int map_task_no,
             UserMapFunc map_f,
             const std::string& input_fp,
             IntermediateHashFunc hash_inter
@@ -64,6 +65,9 @@ private:
             const std::string& fp,
             Params_ifs... args, ...
     );
+
+    std::string
+    get_intermediate_fp(const int m, const int r);
 };
 
 struct Worker::FailedToOpenUserFileException: public std::invalid_argument {
