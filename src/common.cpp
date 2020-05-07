@@ -1,8 +1,6 @@
 #include <sb-mapreduce/common.h>
 
 #include <string>
-#include <fstream>
-#include <exception>
 #include <iostream>
 
 namespace shiraz::MapReduce::utils {

@@ -9,7 +9,14 @@ namespace shiraz::MapReduce {
 
 class Worker {
 public:
-    explicit Worker(int id) : id{id} {}
+    explicit Worker(
+            const int id,
+            const int M,
+            const int R
+    ) :
+            id{id},
+            num_map_tasks{M},
+            num_reduce_tasks{R} {}
 
     // Not copyable.
     Worker(const Worker& w) =delete;
@@ -19,16 +26,18 @@ public:
     Worker(Worker&& w) =default;
     Worker& operator=(Worker&& w) =default;
 
-    std::string
+    std::vector<std::string>
     map_task(
+            const int map_task_no,
             UserMapFunc map_f,
-            const std::string& input_fp
+            const std::string& input_fp,
+            IntermediateHashFunc hash_inter
     );
 
     void
     reduce_task(
             UserReduceFunc reduce_f,
-            const std::string& intermediate_fp,
+            const _vec_of_const_str_ref& inter_fps,
             const std::string& output_fp
     );
 
@@ -47,6 +56,8 @@ public:
 
 private:
     int id;
+    int num_map_tasks;    // M
+    int num_reduce_tasks; // R
 
     template<typename T_fstream, typename S, typename ...Params_ifs>
     T_fstream
@@ -54,6 +65,9 @@ private:
             const std::string& fp,
             Params_ifs... args, ...
     );
+
+    std::string
+    get_intermediate_fp(const int m, const int r) const;
 };
 
 struct Worker::FailedToOpenUserFileException: public std::invalid_argument {

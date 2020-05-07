@@ -3,9 +3,20 @@
 #include <sb-mapreduce/worker.h>
 #include <sb-mapreduce/common.h>
 
+#include <functional>
 #include <unordered_set>
 #include <sstream>
-#include <iostream>
+#include <vector>
+
+namespace {
+
+shiraz::MapReduce::_vec_of_const_str_ref
+slice_M_reduce_files_for(
+        const int r,
+        const std::vector<std::vector<std::string>>& inter_fps
+);
+
+}
 
 namespace shiraz::MapReduce {
 
@@ -42,12 +53,17 @@ Master::go() {
 
     /* Construct all the workers. */
 
+    const int&& M = this->input_files->size();
+    const int&& R = this->output_files->size();
+
     for (int i = 0; i < this->num_workers; i++) {
-        free_workers.emplace(Worker{i});
+        free_workers.emplace(Worker{i, M, R});
     }
 
     /* Map Stage */
 
+    // TODO: Should pass in ref?
+    // M x R matrix of intermediate file paths.
     const auto intermediate_file_paths = this->map_stage(
             free_workers, busy_workers
     );
@@ -62,22 +78,24 @@ Master::go() {
     // delete / have ownership. This cleanup should be automatic in the
     // destructor of a resource handle.
 
-    std::for_each(intermediate_file_paths.begin(), intermediate_file_paths.end(),
-            [](auto& fp) { std::filesystem::remove(fp); }
-    );
+    for (const auto& v: intermediate_file_paths) {
+        for (const auto& fp: v) {
+            std::filesystem::remove(fp);
+        }
+    }
 }
 
 /**
  * Invariant: All workers are free before and after this function.
  * Return the vector of intermediate file paths produced by the map tasks.
  */
-std::vector<std::string>
+std::vector<std::vector<std::string>>
 Master::map_stage(
         std::unordered_set<Worker, Worker::Hash>& free_workers,
         std::unordered_set<Worker, Worker::Hash>& busy_workers
 ) {
     // Store and return for reduce stage later.    
-    std::vector<std::string> intermediate_file_paths;
+    std::vector<std::vector<std::string>> intermediate_file_paths;
 
     // Assume for now we definitely have enough workers to do this in iteration
     // of the outer loop.
@@ -88,6 +106,7 @@ Master::map_stage(
 
     auto cur_input_fp = this->input_files->begin();
     const auto end_input_fp = this->input_files->end();
+    int m;
 
     while (cur_input_fp != end_input_fp) {
         while (!free_workers.empty() && cur_input_fp != end_input_fp) {
@@ -96,12 +115,13 @@ Master::map_stage(
             ).value();           
 
             intermediate_file_paths.emplace_back(
-                    w.map_task(this->map_f, *cur_input_fp)
+                    w.map_task(m, this->map_f, *cur_input_fp, this->intermediate_hash)
             );
 
             busy_workers.emplace(std::move(w));
 
             ++cur_input_fp;
+            ++m;
         }
     }
 
@@ -120,9 +140,9 @@ void
 Master::reduce_stage(
         std::unordered_set<Worker, Worker::Hash>& free_workers,
         std::unordered_set<Worker, Worker::Hash>& busy_workers,
-        std::vector<std::string> intermediate_file_paths
+        const std::vector<std::vector<std::string>>& intermediate_file_paths
 ) {
-    int cur_output_idx = 0;
+    int r = 0;
     auto cur_output_fp = this->output_files->begin();
     const auto end_output_fp = this->output_files->end();
 
@@ -132,15 +152,16 @@ Master::reduce_stage(
                     free_workers.begin()
             ).value();
 
-            // TODO: For now, we just take 1 intermediate file instead of R.
-            const auto& inter_fp = intermediate_file_paths[cur_output_idx];
+            const auto inter_fps = slice_M_reduce_files_for(r,
+                    intermediate_file_paths
+            );
 
-            w.reduce_task(this->reduce_f, inter_fp, *cur_output_fp);
+            w.reduce_task(this->reduce_f, inter_fps, *cur_output_fp);
 
             busy_workers.emplace(std::move(w));
 
             ++cur_output_fp;
-            ++cur_output_idx;
+            ++r;
         }
     }
 
@@ -174,3 +195,22 @@ Master::NotEnoughWorkersException::build_error_str(
     }
 
 } // namespace shiraz::MapReduce
+
+using namespace shiraz::MapReduce;
+
+namespace {
+
+_vec_of_const_str_ref
+slice_M_reduce_files_for(
+        const int r,
+        const std::vector<std::vector<std::string>>& inter_fps
+) {
+    _vec_of_const_str_ref slice;
+    for (const auto& fps_for_m: inter_fps) {
+        slice.push_back(std::cref(fps_for_m[r]));
+    }
+
+    return slice;
+}
+
+} // namespace anonymous
