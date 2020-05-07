@@ -50,7 +50,8 @@ Worker::map_task(
 
     map_f(input_ifs, emit_intermediate_s);
 
-    return intermediate_file_path;
+    // Cast away const-ness to allow automatic move.
+    return (std::string) intermediate_file_path;
 }
 
 void
