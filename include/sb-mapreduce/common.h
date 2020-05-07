@@ -35,10 +35,12 @@ operator<<(std::ostream& os, const IntermediateResult<K_i, V_i>& itr) {
 
 class EmitIntermediateStream {
 public:
-    explicit EmitIntermediateStream(const std::string& fp) :
-            ofs{std::ofstream{fp,
-                std::ofstream::out | std::ofstream::trunc
-            }}
+    EmitIntermediateStream(
+            IntermediateHashFunc hash_inter,
+            std::vector<std::ofstream> ofss
+    ) :
+            hash_inter{hash_inter},
+            ofss{std::move(ofss)}
     {}
 
     /**
@@ -54,7 +56,8 @@ public:
     template<typename K_i, typename V_i>
     EmitIntermediateStream&
     operator<<(IntermediateResult<K_i, V_i> ir) {
-        this->ofs << ir.first << "," << ir.second << std::endl;
+        const auto r = this->hash_inter(ir.first);
+        this->ofss[r] << ir.first << "," << ir.second << std::endl;
         return *this;
     }
 
@@ -79,7 +82,8 @@ public:
     EmitIntermediateStream& operator=(EmitIntermediateStream&&) =default;
 
 private:
-    std::ofstream ofs;
+    IntermediateHashFunc hash_inter;
+    std::vector<std::ofstream> ofss;
 };
 
 namespace utils {
