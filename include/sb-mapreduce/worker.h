@@ -37,7 +37,7 @@ public:
     void
     reduce_task(
             UserReduceFunc reduce_f,
-            const std::string& intermediate_fp,
+            const _vec_of_const_str_ref& inter_fps,
             const std::string& output_fp
     );
 
@@ -67,7 +67,7 @@ private:
     );
 
     std::string
-    get_intermediate_fp(const int m, const int r);
+    get_intermediate_fp(const int m, const int r) const;
 };
 
 struct Worker::FailedToOpenUserFileException: public std::invalid_argument {

@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <vector>
-#include <fstream>
 
 namespace shiraz::MapReduce {
 

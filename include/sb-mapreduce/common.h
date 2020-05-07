@@ -4,8 +4,13 @@
 #include <fstream>
 #include <list>
 #include <vector>
+#include <functional>
 
 namespace shiraz::MapReduce {
+
+/* Used internally to represent 1D slice (view) of 2D vector of strings. */
+using _vec_of_const_str_ref =
+        std::vector<std::reference_wrapper<const std::string>>;
 
 class EmitIntermediateStream;
 using EmitResultStream = std::ofstream;
@@ -16,7 +21,7 @@ using OutputFilePaths = std::vector<std::string>;
 using UserMapFunc = void(*)(std::ifstream&, EmitIntermediateStream&);
 using UserReduceFunc = void(*)(std::string, std::list<std::string>, EmitResultStream&);
 
-using IntermediateHashFunc = int(*)(int);
+using IntermediateHashFunc = std::size_t(*)(std::string&);
 
 template<typename K_i = std::string, typename V_i = std::string>
 class IntermediateResult: public std::pair<K_i, V_i> {

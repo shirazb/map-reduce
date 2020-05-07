@@ -3,8 +3,20 @@
 #include <sb-mapreduce/worker.h>
 #include <sb-mapreduce/common.h>
 
+#include <functional>
 #include <unordered_set>
 #include <sstream>
+#include <vector>
+
+namespace {
+
+shiraz::MapReduce::_vec_of_const_str_ref
+slice_M_reduce_files_for(
+        const int r,
+        const std::vector<std::vector<std::string>>& inter_fps
+);
+
+}
 
 namespace shiraz::MapReduce {
 
@@ -50,6 +62,8 @@ Master::go() {
 
     /* Map Stage */
 
+    // TODO: Should pass in ref?
+    // M x R matrix of intermediate file paths.
     const auto intermediate_file_paths = this->map_stage(
             free_workers, busy_workers
     );
@@ -126,9 +140,9 @@ void
 Master::reduce_stage(
         std::unordered_set<Worker, Worker::Hash>& free_workers,
         std::unordered_set<Worker, Worker::Hash>& busy_workers,
-        std::vector<std::string> intermediate_file_paths
+        const std::vector<std::vector<std::string>>& intermediate_file_paths
 ) {
-    int cur_output_idx = 0;
+    int r = 0;
     auto cur_output_fp = this->output_files->begin();
     const auto end_output_fp = this->output_files->end();
 
@@ -138,15 +152,16 @@ Master::reduce_stage(
                     free_workers.begin()
             ).value();
 
-            // TODO: For now, we just take 1 intermediate file instead of R.
-            const auto& inter_fp = intermediate_file_paths[cur_output_idx];
+            const auto inter_fps = slice_M_reduce_files_for(r,
+                    intermediate_file_paths
+            );
 
-            w.reduce_task(this->reduce_f, inter_fp, *cur_output_fp);
+            w.reduce_task(this->reduce_f, inter_fps, *cur_output_fp);
 
             busy_workers.emplace(std::move(w));
 
             ++cur_output_fp;
-            ++cur_output_idx;
+            ++r;
         }
     }
 
@@ -180,3 +195,22 @@ Master::NotEnoughWorkersException::build_error_str(
     }
 
 } // namespace shiraz::MapReduce
+
+using namespace shiraz::MapReduce;
+
+namespace {
+
+_vec_of_const_str_ref
+slice_M_reduce_files_for(
+        const int r,
+        const std::vector<std::vector<std::string>>& inter_fps
+) {
+    _vec_of_const_str_ref slice;
+    for (const auto& fps_for_m: inter_fps) {
+        slice.push_back(std::cref(fps_for_m[r]));
+    }
+
+    return slice;
+}
+
+} // namespace anonymous

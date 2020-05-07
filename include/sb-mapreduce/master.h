@@ -58,7 +58,7 @@ private:
     reduce_stage(
             std::unordered_set<Worker, Worker::Hash>& free_workers,
             std::unordered_set<Worker, Worker::Hash>& busy_workers,
-            std::vector<std::string> intermediate_file_paths
+            const std::vector<std::vector<std::string>>& intermediate_file_paths
     );
 };
 

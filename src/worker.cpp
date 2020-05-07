@@ -64,28 +64,28 @@ Worker::map_task(
 void
 Worker::reduce_task(
         UserReduceFunc reduce_f,
-        const std::string& intermediate_fp,
+        const _vec_of_const_str_ref& inter_fps,
         const std::string& output_fp
 ) {
     /* Build intermediates map. */
 
     std::unordered_map<std::string, std::list<std::string>> intermediates;
 
-    // Construct iterator of intermediate file.
-    auto intermediate_ifs = try_open_file_or_throw<std::ifstream, inter_file>(
-            intermediate_fp
-    );
-    std::istream_iterator<std::string> intermediate_ifs_it{intermediate_ifs};
-    std::istream_iterator<std::string> eos_it{};
+    for (const auto& fp: inter_fps) {
+        // Construct iterator of intermediate file.
+        auto inter_ifs = try_open_file_or_throw<std::ifstream, inter_file>(fp);
+        std::istream_iterator<std::string> inter_ifs_it{inter_ifs};
+        std::istream_iterator<std::string> eos_it{};
 
-    std::for_each(intermediate_ifs_it, eos_it,
-            [&intermediates](const auto& line){
-                std::string ikey, ivalue;
-                parse_intermediate_entry(line, ikey, ivalue);
+        std::for_each(inter_ifs_it, eos_it,
+                [&intermediates](const auto& line){
+                  std::string ikey, ivalue;
+                  parse_intermediate_entry(line, ikey, ivalue);
 
-                intermediates[ikey].emplace_back(std::move(ivalue));
-        }
-    );
+                  intermediates[ikey].emplace_back(std::move(ivalue));
+                }
+        );
+    }
 
     /* Run user reduce func on each key */
 
@@ -134,7 +134,7 @@ Worker::try_open_file_or_throw(const std::string& fp, Params_ifs... args, ...) {
 }
 
 std::string
-Worker::get_intermediate_fp(const int m, const int r) {
+Worker::get_intermediate_fp(const int m, const int r) const {
     // NB: temp_directory_path() not thread-safe
     static const std::string intermediate_file_dir =
             std::filesystem::temp_directory_path();
