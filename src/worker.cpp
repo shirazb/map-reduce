@@ -15,7 +15,7 @@ namespace {
 
 void
 parse_intermediate_entry(
-    const std::string s,
+    const std::string& s,
     std::string& ikey,
     std::string& ivalue
 );
@@ -173,7 +173,7 @@ namespace {
  */
 void
 parse_intermediate_entry(
-        const std::string s,
+        const std::string& s,
         std::string& ikey,
         std::string& ivalue
 ) {
