@@ -93,20 +93,16 @@ namespace {
 
 void
 run_mapreduce_job() {
-    std::ifstream preproc_ifs{preproc_file_path};
-    MapReduce::InputFileStreams inputs;
-    inputs.emplace_back(std::move(preproc_ifs));
+    MapReduce::InputFilePaths inputs;
+    inputs.emplace_back(preproc_file_path);
 
-    std::ofstream output_ofs{output_file_path, 
-            std::ofstream::out | std::ofstream::trunc
-    };
-    MapReduce::OutputFileStreams outputs;
-    outputs.emplace_back(std::move(output_ofs));
+    MapReduce::OutputFilePaths outputs;
+    outputs.emplace_back(output_file_path);
     
     // Construct shared_ptr to stack variables with dummy "deleter"
     MapReduce::Master master{
-            make_shared_ptr_to_stack<MapReduce::InputFileStreams>(&inputs),
-            make_shared_ptr_to_stack<MapReduce::OutputFileStreams>(&outputs),
+            make_shared_ptr_to_stack<MapReduce::InputFilePaths>(&inputs),
+            make_shared_ptr_to_stack<MapReduce::OutputFilePaths>(&outputs),
             map_f, reduce_f,
             NUM_WORKERS,
             intermediate_hash

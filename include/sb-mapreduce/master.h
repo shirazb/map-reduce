@@ -17,8 +17,8 @@ namespace shiraz::MapReduce {
 class Master {
 public:
     Master(
-            std::shared_ptr<InputFileStreams> input_files,
-            std::shared_ptr<OutputFileStreams> output_files,
+            std::shared_ptr<InputFilePaths> input_files,
+            std::shared_ptr<OutputFilePaths> output_files,
             UserMapFunc map_f,
             UserReduceFunc reduce_f,
             int num_workers,
@@ -38,9 +38,8 @@ public:
     struct NotEnoughWorkersException;
 
 private:
-    // file stream iterators
-    std::shared_ptr<InputFileStreams> input_files; // size M
-    std::shared_ptr<OutputFileStreams> output_files; // size R
+    std::shared_ptr<InputFilePaths> input_files; // size M
+    std::shared_ptr<OutputFilePaths> output_files; // size R
 
     UserMapFunc map_f;
     UserReduceFunc reduce_f;

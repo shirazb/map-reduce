@@ -9,7 +9,7 @@ namespace shiraz::MapReduce::utils {
 
 void
 log_file(
-        const std::string file_path,
+        const std::string& file_path,
         int num_words,
         char get_line_delim
 ) {
@@ -28,5 +28,18 @@ log_file(
         std::cout << word << std::endl;
     }
 }
+
+// template<typename... Params_ifs>
+// void
+// try_open_file(
+//         const std::string& file_path,
+//         Params_ifs... args_ifs...
+// ) {
+//     std::ifstream ifs{file_path, args_ifs};
+    
+//     if (!ifs) {
+//         std::cout << 
+//     }
+// }
 
 }

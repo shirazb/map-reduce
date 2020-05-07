@@ -10,8 +10,8 @@
 namespace shiraz::MapReduce {
 
 Master::Master(
-        std::shared_ptr<InputFileStreams> input_files,
-        std::shared_ptr<OutputFileStreams> output_files,
+        std::shared_ptr<InputFilePaths> input_files,
+        std::shared_ptr<OutputFilePaths> output_files,
         UserMapFunc map_f,
         UserReduceFunc reduce_f,
         int num_workers,
@@ -79,29 +79,29 @@ Master::map_stage(
     // Store and return for reduce stage later.    
     std::vector<std::string> intermediate_file_paths;
 
-    // Iterator of file stream iterators
-    auto cur_ifstream_it = this->input_files->begin();
-    const auto end_ifstream_it = this->input_files->end();
-
     // Assume for now we definitely have enough workers to do this in iteration
     // of the outer loop.
 
     // While workers remain, keep scheduling tasks.
     // Move free workers into busy set.
     // Invoke map task on free worker and store returned intermediate file path.
-    while (cur_ifstream_it != end_ifstream_it) {
-        while (!free_workers.empty() && cur_ifstream_it != end_ifstream_it) {
+
+    auto cur_input_fp = this->input_files->begin();
+    const auto end_input_fp = this->input_files->end();
+
+    while (cur_input_fp != end_input_fp) {
+        while (!free_workers.empty() && cur_input_fp != end_input_fp) {
             Worker& w = free_workers.extract(
                     free_workers.begin()
-            ).value();
+            ).value();           
 
             intermediate_file_paths.emplace_back(
-                    w.map_task(this->map_f, *cur_ifstream_it)
+                    w.map_task(this->map_f, *cur_input_fp)
             );
 
             busy_workers.emplace(std::move(w));
 
-            ++cur_ifstream_it;
+            ++cur_input_fp;
         }
     }
 
@@ -122,26 +122,25 @@ Master::reduce_stage(
         std::unordered_set<Worker, Worker::Hash>& busy_workers,
         std::vector<std::string> intermediate_file_paths
 ) {
-    int cur_ofstream_idx = 0;
-    auto cur_ofstream_it = this->output_files->begin();
-    const auto end_ofstream_it = this->output_files->end();
+    int cur_output_idx = 0;
+    auto cur_output_fp = this->output_files->begin();
+    const auto end_output_fp = this->output_files->end();
 
-    while (cur_ofstream_it != end_ofstream_it) {
-        while (!free_workers.empty() && cur_ofstream_it != end_ofstream_it) {
+    while (cur_output_fp != end_output_fp) {
+        while (!free_workers.empty() && cur_output_fp != end_output_fp) {
             Worker& w = free_workers.extract(
                     free_workers.begin()
             ).value();
 
             // TODO: For now, we just take 1 intermediate file instead of R.
-            std::ifstream inter_ifs{intermediate_file_paths[cur_ofstream_idx]};
-            std::istream_iterator<std::string> inter_it{inter_ifs};
+            const auto& inter_fp = intermediate_file_paths[cur_output_idx];
 
-            w.reduce_task(this->reduce_f, inter_ifs, *cur_ofstream_it);
+            w.reduce_task(this->reduce_f, inter_fp, *cur_output_fp);
 
             busy_workers.emplace(std::move(w));
 
-            ++cur_ofstream_it;
-            ++cur_ofstream_idx;
+            ++cur_output_fp;
+            ++cur_output_idx;
         }
     }
 

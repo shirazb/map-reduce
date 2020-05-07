@@ -9,10 +9,10 @@
 namespace shiraz::MapReduce {
 
 class EmitIntermediateStream;
-class EmitResultStream;
+using EmitResultStream = std::ofstream;
 
-using InputFileStreams = std::vector<std::ifstream>;
-using OutputFileStreams = std::vector<std::ofstream>;
+using InputFilePaths = std::vector<std::string>;
+using OutputFilePaths = std::vector<std::string>;
 
 using UserMapFunc = void(*)(std::ifstream&, EmitIntermediateStream&);
 using UserReduceFunc = void(*)(std::string, std::list<std::string>, EmitResultStream&);
@@ -33,9 +33,13 @@ operator<<(std::ostream& os, const IntermediateResult<K_i, V_i>& itr) {
     return os;
 }
 
-class EmitIntermediateStream: public std::ofstream {
+class EmitIntermediateStream {
 public:
-    using std::ofstream::ofstream;
+    EmitIntermediateStream(const std::string& fp) :
+            ofs{std::ofstream{fp,
+                std::ofstream::out | std::ofstream::trunc
+            }}
+    {}
 
     /**
      * For convenience, and to hide type of output iterator created. In
@@ -44,25 +48,45 @@ public:
     template<typename K_i = std::string, typename V_i = std::string>
     std::ostream_iterator<IntermediateResult<K_i, V_i>>
     begin() {
-        return std::ostream_iterator<IntermediateResult<K_i, V_i>>{*this};
+        return std::ostream_iterator<IntermediateResult<K_i, V_i>>{this->ofs};
     }
-};
 
-class EmitResultStream: public std::ofstream {
-    using std::ofstream::ofstream;
-
-    template<typename V_r = std::string>
-    std::ostream_iterator<V_r>
-    begin(const char delim = '\n') {
-        return std::ostream_iterator<V_r>{*this, delim};
+    template<typename K_i, typename V_i>
+    EmitIntermediateStream&
+    operator<<(IntermediateResult<K_i, V_i> ir) {
+        this->ofs << ir.first << "," << ir.second << std::endl;
+        return *this;
     }
+
+    template<typename K_i, typename V_i>
+    void
+    to_stream(IntermediateResult<K_i, V_i> ir) {
+        this << ir;
+    }
+
+    bool
+    operator!() const {
+        return !this->ofs;
+    }
+
+    explicit
+    operator bool() const {
+        return (bool) this->ofs;
+    }
+
+    // Is movable, not copyable. Copy already deleted in superclass.
+    EmitIntermediateStream(EmitIntermediateStream&&) =default;
+    EmitIntermediateStream& operator=(EmitIntermediateStream&&) =default;
+
+private:
+    std::ofstream ofs;
 };
 
 namespace utils {
 
 void
 log_file(
-        const std::string file_path,
+        const std::string& file_path,
         int num_words = 30,
         char get_line_delim = '\n'
 );
