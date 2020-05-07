@@ -9,7 +9,14 @@ namespace shiraz::MapReduce {
 
 class Worker {
 public:
-    explicit Worker(int id) : id{id} {}
+    explicit Worker(
+            const int id,
+            const int M,
+            const int R
+    ) :
+            id{id},
+            num_map_tasks{M},
+            num_reduce_tasks{R} {}
 
     // Not copyable.
     Worker(const Worker& w) =delete;
@@ -48,6 +55,8 @@ public:
 
 private:
     int id;
+    int num_map_tasks;    // M
+    int num_reduce_tasks; // R
 
     template<typename T_fstream, typename S, typename ...Params_ifs>
     T_fstream

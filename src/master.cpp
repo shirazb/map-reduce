@@ -41,8 +41,11 @@ Master::go() {
 
     /* Construct all the workers. */
 
+    const int&& M = this->input_files->size();
+    const int&& R = this->output_files->size();
+
     for (int i = 0; i < this->num_workers; i++) {
-        free_workers.emplace(Worker{i});
+        free_workers.emplace(Worker{i, M, R});
     }
 
     /* Map Stage */
