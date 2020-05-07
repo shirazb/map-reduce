@@ -35,7 +35,7 @@ operator<<(std::ostream& os, const IntermediateResult<K_i, V_i>& itr) {
 
 class EmitIntermediateStream {
 public:
-    EmitIntermediateStream(const std::string& fp) :
+    explicit EmitIntermediateStream(const std::string& fp) :
             ofs{std::ofstream{fp,
                 std::ofstream::out | std::ofstream::trunc
             }}
