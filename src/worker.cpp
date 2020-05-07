@@ -10,14 +10,13 @@
 #include <unordered_map>
 #include <sstream>
 
-// Only indent 4 beacuse of stupid editors like VS Code
 namespace {
 
 void
 parse_intermediate_entry(
-    const std::string& s,
-    std::string& ikey,
-    std::string& ivalue
+        const std::string& s,
+        std::string& ikey,
+        std::string& ivalue
 );
 
 struct inter_file;
