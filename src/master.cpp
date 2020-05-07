@@ -64,22 +64,24 @@ Master::go() {
     // delete / have ownership. This cleanup should be automatic in the
     // destructor of a resource handle.
 
-    std::for_each(intermediate_file_paths.begin(), intermediate_file_paths.end(),
-            [](auto& fp) { std::filesystem::remove(fp); }
-    );
+    for (const auto& v: intermediate_file_paths) {
+        for (const auto& fp: v) {
+            std::filesystem::remove(fp);
+        }
+    }
 }
 
 /**
  * Invariant: All workers are free before and after this function.
  * Return the vector of intermediate file paths produced by the map tasks.
  */
-std::vector<std::string>
+std::vector<std::vector<std::string>>
 Master::map_stage(
         std::unordered_set<Worker, Worker::Hash>& free_workers,
         std::unordered_set<Worker, Worker::Hash>& busy_workers
 ) {
     // Store and return for reduce stage later.    
-    std::vector<std::string> intermediate_file_paths;
+    std::vector<std::vector<std::string>> intermediate_file_paths;
 
     // Assume for now we definitely have enough workers to do this in iteration
     // of the outer loop.

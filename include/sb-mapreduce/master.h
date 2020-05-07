@@ -48,7 +48,7 @@ private:
 
     IntermediateHashFunc intermediate_hash;
 
-    std::vector<std::string>
+    std::vector<std::vector<std::string>>
     map_stage(
             std::unordered_set<Worker, Worker::Hash>& free_workers,
             std::unordered_set<Worker, Worker::Hash>& busy_workers

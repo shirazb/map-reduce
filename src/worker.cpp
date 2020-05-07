@@ -26,7 +26,7 @@ struct user_file;
 
 namespace shiraz::MapReduce {
 
-std::string
+std::vector<std::string>
 Worker::map_task(
         const int map_task_no,
         UserMapFunc map_f,
