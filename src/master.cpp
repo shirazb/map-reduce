@@ -95,7 +95,7 @@ Master::map_stage(
             ).value();           
 
             intermediate_file_paths.emplace_back(
-                    w.map_task(this->map_f, *cur_input_fp)
+                    w.map_task(this->map_f, *cur_input_fp, this->intermediate_hash);
             );
 
             busy_workers.emplace(std::move(w));

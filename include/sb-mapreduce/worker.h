@@ -22,7 +22,8 @@ public:
     std::string
     map_task(
             UserMapFunc map_f,
-            const std::string& input_fp
+            const std::string& input_fp,
+            IntermediateHashFunc hash_inter
     );
 
     void
