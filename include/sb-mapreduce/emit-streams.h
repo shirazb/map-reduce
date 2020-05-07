@@ -25,9 +25,18 @@ public:
     EmitIntermediateStreamIterator
     begin();
 
+    /* Both lvalue and rvalue interface to stream functions. */
+
     template<typename K_i, typename V_i>
     EmitIntermediateStream&
     operator<<(IntermediateResult<K_i, V_i>& ir) {
+        this << std::move(ir);
+        return *this;
+    }
+
+    template<typename K_i, typename V_i>
+    EmitIntermediateStream&
+    operator<<(IntermediateResult<K_i, V_i>&& ir) {
         const auto r = this->hash_inter(ir.first);
         this->ofss[r] << ir.first << "," << ir.second << std::endl;
         return *this;
@@ -36,6 +45,12 @@ public:
     template<typename K_i, typename V_i>
     void
     to_stream(IntermediateResult<K_i, V_i>& ir) {
+        this << ir;
+    }
+
+    template<typename K_i, typename V_i>
+    void
+    to_stream(IntermediateResult<K_i, V_i>&& ir) {
         this << ir;
     }
 
