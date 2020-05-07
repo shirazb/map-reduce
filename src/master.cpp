@@ -5,7 +5,6 @@
 
 #include <unordered_set>
 #include <sstream>
-#include <iostream>
 
 namespace shiraz::MapReduce {
 
