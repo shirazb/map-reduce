@@ -2,6 +2,7 @@
 #include <sb-mapreduce/version.h>
 #include <sb-mapreduce/master.h>
 #include <sb-mapreduce/common.h>
+#include <sb-mapreduce/emit-streams.h>
 
 #include <memory>
 #include <string>
@@ -11,6 +12,7 @@
 #include <iterator>
 #include <filesystem>
 #include <sstream>
+#include <cstddef>
 
 using namespace shiraz;
 
@@ -57,7 +59,9 @@ remove_punctuation(std::string s);
 void
 map_f(std::ifstream& ifs, MapReduce::EmitIntermediateStream& emit);
 
-const auto intermediate_hash = [](int k){ return k % NUM_WORKERS; };
+static const auto intermediate_hash = [](std::string& k) -> std::size_t {
+    return std::hash<std::string>{}(k) % NUM_WORKERS;
+};
 
 void
 reduce_f(
