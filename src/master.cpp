@@ -48,8 +48,8 @@ Master::Master(
 
 void
 Master::go() {
-    std::unordered_set<Worker, Worker::Hash> free_workers;
-    std::unordered_set<Worker, Worker::Hash> busy_workers;
+    std::unordered_set<Worker> free_workers;
+    std::unordered_set<Worker> busy_workers;
 
     /* Construct all the workers. */
 
@@ -91,8 +91,8 @@ Master::go() {
  */
 std::vector<std::vector<std::string>>
 Master::map_stage(
-        std::unordered_set<Worker, Worker::Hash>& free_workers,
-        std::unordered_set<Worker, Worker::Hash>& busy_workers
+        std::unordered_set<Worker>& free_workers,
+        std::unordered_set<Worker>& busy_workers
 ) {
     // Store and return for reduce stage later.    
     std::vector<std::vector<std::string>> intermediate_file_paths;
@@ -138,8 +138,8 @@ Master::map_stage(
  */
 void
 Master::reduce_stage(
-        std::unordered_set<Worker, Worker::Hash>& free_workers,
-        std::unordered_set<Worker, Worker::Hash>& busy_workers,
+        std::unordered_set<Worker>& free_workers,
+        std::unordered_set<Worker>& busy_workers,
         const std::vector<std::vector<std::string>>& intermediate_file_paths
 ) {
     int r = 0;
