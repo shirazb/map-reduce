@@ -15,19 +15,6 @@ namespace shiraz::MapReduce {
 class EmitIntermediateStream;
 class EmitIntermediateStreamIterator;
 
-template<typename K_i = std::string, typename V_i = std::string>
-class IntermediateResult: public std::pair<K_i, V_i> {
-public:
-    using std::pair<K_i, V_i>::pair;
-};
-
-template<typename K_i, typename V_i>
-std::ostream&
-operator<<(std::ostream& os, const IntermediateResult<K_i, V_i>& itr) {
-    os << itr.first << "," << itr.second << std::endl;
-    return os;
-}
-
 class EmitIntermediateStream {
 public:
     EmitIntermediateStream(
