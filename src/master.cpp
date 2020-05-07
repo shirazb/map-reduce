@@ -90,6 +90,7 @@ Master::map_stage(
 
     auto cur_input_fp = this->input_files->begin();
     const auto end_input_fp = this->input_files->end();
+    int m;
 
     while (cur_input_fp != end_input_fp) {
         while (!free_workers.empty() && cur_input_fp != end_input_fp) {
@@ -98,12 +99,13 @@ Master::map_stage(
             ).value();           
 
             intermediate_file_paths.emplace_back(
-                    w.map_task(this->map_f, *cur_input_fp, this->intermediate_hash);
+                    w.map_task(m, this->map_f, *cur_input_fp, this->intermediate_hash)
             );
 
             busy_workers.emplace(std::move(w));
 
             ++cur_input_fp;
+            ++m;
         }
     }
 
