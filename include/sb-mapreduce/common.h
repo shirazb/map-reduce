@@ -1,5 +1,6 @@
 #pragma once
 
+#include <any>
 #include <cstddef>
 #include <string>
 #include <fstream>
@@ -22,7 +23,7 @@ using OutputFilePaths = std::vector<std::string>;
 using UserMapFunc = void(*)(std::ifstream&, EmitIntermediateStream&);
 using UserReduceFunc = void(*)(std::string, std::list<std::string>, EmitResultStream&);
 
-using IntermediateHashFunc = std::size_t(*)(std::string&);
+using IntermediateHashFunc = std::size_t(*)(std::any);
 
 template<typename K_i = std::string, typename V_i = std::string>
 class IntermediateResult: public std::pair<K_i, V_i> {

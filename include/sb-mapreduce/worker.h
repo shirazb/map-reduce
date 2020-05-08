@@ -41,18 +41,15 @@ public:
             const std::string& output_fp
     );
 
-    struct Hash {
-        std::size_t operator()(const Worker& w) const {
-            return std::hash<int>{}(w.id);
-        }
-    };
-
     bool operator==(const Worker& w) const {
         return this->id == w.id;
     }
 
     struct FailedToOpenUserFileException;
     struct FailedToOpenIntermediateFileException;
+
+    /* std hash func: returns id. */
+    friend struct std::hash<Worker>;
 
 private:
     int id;
@@ -93,3 +90,12 @@ private:
 
 
 } // namespace shiraz::MapReduce
+
+using namespace shiraz::MapReduce;
+
+template<>
+struct std::hash<Worker> {
+    std::size_t operator()(const Worker& w) const {
+        return std::hash<int>{}(w.id);
+    }
+};
