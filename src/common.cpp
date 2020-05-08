@@ -28,17 +28,4 @@ log_file(
     }
 }
 
-// template<typename... Params_ifs>
-// void
-// try_open_file(
-//         const std::string& file_path,
-//         Params_ifs... args_ifs...
-// ) {
-//     std::ifstream ifs{file_path, args_ifs};
-    
-//     if (!ifs) {
-//         std::cout << 
-//     }
-// }
-
 }
