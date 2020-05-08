@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <sstream>
 #include <vector>
+#include <memory>
 
 namespace {
 
@@ -35,15 +36,7 @@ Master::Master(
         num_workers{num_workers},
         intermediate_hash{intermediate_hash}
 {
-    // Establish invariant: Enough workers for the tasks.
-    if (this->input_files->size() > this->num_workers ||
-            this->output_files->size() > this->num_workers) {
-        throw Master::NotEnoughWorkersException(
-                this->input_files->size(),
-                this->output_files->size(),
-                this->num_workers
-        );
-    }
+    this->establish_invariants_or_throw();
 }
 
 void
@@ -168,31 +161,37 @@ Master::reduce_stage(
     free_workers.merge(busy_workers);
 }
 
-Master::NotEnoughWorkersException::NotEnoughWorkersException(
-            std::size_t num_ifstreams,
-            std::size_t num_ofstreams,
-            int num_workers
-    ):
-            invalid_argument(build_error_str(
-                    num_ifstreams, num_ofstreams, num_workers
-            ))
-    {}
+void
+Master::establish_invariants_or_throw() const {
+    /* Num input and output files > 1. */
 
-std::string
-Master::NotEnoughWorkersException::build_error_str(
-            std::size_t num_ifstreams,
-            std::size_t num_ofstreams,
-            int num_workers
-    ) {
-        std::ostringstream msg;
-        msg << "Number workers must be at least the number of ifstreams and " <<
-            "number of ofstreams. " <<
-            "Number workers = " << num_workers <<
-            ". Number ifstreams = " << num_ifstreams <<
-            ". Number ofstreams = " << num_ofstreams;
-
-        return msg.str();
+    if (this->input_files->empty()) {
+        throw Master::InvalidArgumentException("Must provide at least one "
+                                               "input file.");
     }
+    if (this->output_files->empty()) {
+        throw Master::InvalidArgumentException("Must provide at least one "
+                                               "output file.");
+    }
+
+    /* User map, reduce and hash funcs are non-null. */
+
+    if (!this->map_f) {
+        throw Master::InvalidArgumentException("Provided UserMapFunc is null.");
+    }
+    if (!this->reduce_f) {
+        throw Master::InvalidArgumentException("Provided UserReduceFunc is null.");
+    }
+    if (!this->intermediate_hash) {
+        throw Master::InvalidArgumentException("Provided IntermediateHash is null.");
+    }
+
+    /* At least 1 worker. */
+
+    if (this->num_workers < 1) {
+        throw Master::InvalidArgumentException("Number workers must be at least 1.");
+    }
+}
 
 } // namespace shiraz::MapReduce
 
