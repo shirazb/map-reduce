@@ -39,3 +39,30 @@ The output file will be in `outputs/word_count.txt`.
 
 When running the demo, your current working directory must be the CMake build directory you previously specified.
 
+## Using the MapReduce library
+
+### Including the Headers
+
+The `libsb-mapreduce` target exposes a public include directory.
+Any required headers (whose use will be demonstrated below) can thus be included as follows in your code:
+```c++
+#include <sb-mapreduce/some-header.h>
+```
+
+### Naming Conventions and Namespaces
+
+As shown, the headers use a `lower-kebab-case` style.
+The types they expose will use an `UpperCamelCase` style, with their members (and any free-standing functions, etc.) being `lower_snake_case`.
+For example:
+
+```c++
+#include <sb-mapreduce/some-class.h>
+
+auto c = shiraz::MapReduce::SomeClass{}.some_method();
+```
+
+As can be seen, the library is contained inside the `shiraz::MapReduce` namespace.
+
+Thus far, the main user-visible identifiers are within this namespaces; no sub-namespaces required.
+That is, other than a `::utils` namespace, that provides some helper functions the user may find useful.
+For example, `shiraz::MapReduce::utils::log_file()` that will log some lines of a file to stdout.
