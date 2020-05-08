@@ -17,7 +17,7 @@ The CMake targets are the MapReduce library itself `libsb-mapreduce`; and a demo
 The library can be built as shared (dynamic) or static using the `BUILD_SHARED_LIBS` switch at configure time, defaulting to static.
 
 ```shell script
-cmake -S <path-to-this-dir> -BUILD_SHARED_LIBS=ON     # Build as shared lib
+cmake -S <path-to-this-dir> -BUILD_SHARED_LIBS=ON  ...   # Build as shared lib
 ```
 
 The built library can be found in `<path-to-build-dir>/src`.
@@ -64,8 +64,8 @@ auto c = shiraz::MapReduce::SomeClass{}.some_method();
 As can be seen, the library is contained inside the `shiraz::MapReduce` namespace.
 
 Thus far, the main user-visible identifiers are within this namespaces; no sub-namespaces required.
-That is, other than a `::utils` namespace, that provides some helper functions the user may find useful.
-For example, `shiraz::MapReduce::utils::log_file()` that will log some lines of a file to stdout.
+That is, other than a `::utils` namespace, which provides some helper functions the user may find useful.
+For example, `shiraz::MapReduce::utils::log_file()` will log some lines of a file to stdout.
 
 ### Executing a MapReduce Job
 TODO
