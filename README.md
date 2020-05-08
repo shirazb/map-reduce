@@ -24,6 +24,9 @@ The built library can be found in `<path-to-build-dir>/src`.
 
 The built `dev_demo` executable can be found in `<path-to-build-dir>/exe`.
 
+If you do not wish to build the demo, the option `SB_MAPREDUCE_BUILD_DEMO` can be set at configure time.
+If you are using this CMake project as a sub-project of your own build, the demo will not be built by default, but you can override this by setting that option.
+
 ## Running the Demo
 
 To run the demo, before configuring, you must have a `<path-to-this-dir>/data` directory.

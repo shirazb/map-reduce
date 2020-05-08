@@ -26,4 +26,6 @@ set(SBMapReduce_BINARY_INCLUDE_DIR "${PROJECT_BINARY_DIR}/include")
 
 add_subdirectory(src)
 
-add_subdirectory(exe)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR SB_MAPREDUCE_BUILD_DEMO)
+    add_subdirectory(exe)
+endif()
