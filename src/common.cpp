@@ -1,5 +1,6 @@
 #include <sb-mapreduce/common.h>
 
+#include <stdexcept>
 #include <string>
 #include <iostream>
 

@@ -3,6 +3,9 @@
 
 #include <sb-mapreduce/common.h>
 
+#include <stdexcept>
+#include <vector>
+#include <string>
 #include <fstream>
 
 namespace shiraz::MapReduce {

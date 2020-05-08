@@ -10,6 +10,7 @@
 #include <list>
 #include <unordered_map>
 #include <sstream>
+#include <vector>
 
 namespace {
 

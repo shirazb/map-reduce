@@ -4,9 +4,10 @@
 #include <sb-mapreduce/worker.h>
 #include <sb-mapreduce/common.h>
 
+#include <cstddef>
 #include <memory>
 #include <iterator>
-#include <exception>
+#include <stdexcept>
 #include <vector>
 #include <string>
 #include <fstream>
