@@ -66,3 +66,6 @@ As can be seen, the library is contained inside the `shiraz::MapReduce` namespac
 Thus far, the main user-visible identifiers are within this namespaces; no sub-namespaces required.
 That is, other than a `::utils` namespace, that provides some helper functions the user may find useful.
 For example, `shiraz::MapReduce::utils::log_file()` that will log some lines of a file to stdout.
+
+### Executing a MapReduce Job
+TODO
