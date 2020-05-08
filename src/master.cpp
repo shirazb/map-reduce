@@ -36,10 +36,7 @@ Master::Master(
         num_workers{num_workers},
         intermediate_hash{intermediate_hash}
 {
-    // Establish invariant: Enough workers for the tasks.
-    if (num_workers < 1) {
-        throw Master::NotEnoughWorkersException(this->num_workers);
-    }
+    this->establish_invariants_or_throw();
 }
 
 void
@@ -164,19 +161,36 @@ Master::reduce_stage(
     free_workers.merge(busy_workers);
 }
 
-Master::NotEnoughWorkersException::NotEnoughWorkersException(
-            const int num_workers
-    ):
-            invalid_argument(build_error_str(num_workers))
-    {}
+void
+Master::establish_invariants_or_throw() const {
+    /* Num input and output files > 1. */
 
-std::string
-Master::NotEnoughWorkersException::build_error_str(const int num_workers) {
-    std::ostringstream msg;
-    msg << "Number workers must be at least 1. Given: " << num_workers << "."
-            << std::endl;
+    if (this->input_files->empty()) {
+        throw Master::InvalidArgumentException("Must provide at least one "
+                                               "input file.");
+    }
+    if (this->output_files->empty()) {
+        throw Master::InvalidArgumentException("Must provide at least one "
+                                               "output file.");
+    }
 
-    return msg.str();
+    /* User map, reduce and hash funcs are non-null. */
+
+    if (!this->map_f) {
+        throw Master::InvalidArgumentException("Provided UserMapFunc is null.");
+    }
+    if (!this->reduce_f) {
+        throw Master::InvalidArgumentException("Provided UserReduceFunc is null.");
+    }
+    if (!this->intermediate_hash) {
+        throw Master::InvalidArgumentException("Provided IntermediateHash is null.");
+    }
+
+    /* At least 1 worker. */
+
+    if (this->num_workers < 1) {
+        throw Master::InvalidArgumentException("Number workers must be at least 1.");
+    }
 }
 
 } // namespace shiraz::MapReduce

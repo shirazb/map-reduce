@@ -27,16 +27,18 @@ public:
     );
 
     // Not copyable.
-    Master(const Master& m) =delete;
-    Master& operator=(const Master& m) =delete;
+    Master(const Master& m) = delete;
+
+    Master& operator=(const Master& m) = delete;
 
     // Is Movable.
-    Master(Master&& m) =default;
-    Master& operator=(Master&& m) =default;
+    Master(Master&& m) = default;
+
+    Master& operator=(Master&& m) = default;
 
     void go();
 
-    struct NotEnoughWorkersException;
+    struct InvalidArgumentException;
 
 private:
     std::shared_ptr<InputFilePaths> input_files; // size M
@@ -48,6 +50,9 @@ private:
     int num_workers;
 
     IntermediateHashFunc intermediate_hash;
+
+    void
+    establish_invariants_or_throw() const;
 
     std::vector<std::vector<std::string>>
     map_stage(
@@ -63,13 +68,8 @@ private:
     );
 };
 
-struct Master::NotEnoughWorkersException: std::invalid_argument {
-    NotEnoughWorkersException(const int num_workers);
-
-private:
-    static
-    std::string
-    build_error_str(const int num_workers);
+struct Master::InvalidArgumentException: std::invalid_argument {
+    using std::invalid_argument::invalid_argument;
 };
 
 } // namespace shiraz::MapReduce
