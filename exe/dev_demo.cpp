@@ -17,6 +17,7 @@
 using namespace shiraz;
 
 #define NUM_WORKERS 10
+#define NUM_OUTPUTS 1
 
 namespace {
 
@@ -60,7 +61,7 @@ void
 map_f(std::ifstream& ifs, MapReduce::EmitIntermediateStream& emit);
 
 static const auto intermediate_hash = [](std::string& k) -> std::size_t {
-    return std::hash<std::string>{}(k) % NUM_WORKERS;
+    return std::hash<std::string>{}(k) % NUM_OUTPUTS;
 };
 
 void
