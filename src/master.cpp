@@ -37,13 +37,8 @@ Master::Master(
         intermediate_hash{intermediate_hash}
 {
     // Establish invariant: Enough workers for the tasks.
-    if (this->input_files->size() > this->num_workers ||
-            this->output_files->size() > this->num_workers) {
-        throw Master::NotEnoughWorkersException(
-                this->input_files->size(),
-                this->output_files->size(),
-                this->num_workers
-        );
+    if (num_workers < 1) {
+        throw Master::NotEnoughWorkersException(this->num_workers);
     }
 }
 
@@ -170,30 +165,19 @@ Master::reduce_stage(
 }
 
 Master::NotEnoughWorkersException::NotEnoughWorkersException(
-            std::size_t num_ifstreams,
-            std::size_t num_ofstreams,
-            int num_workers
+            const int num_workers
     ):
-            invalid_argument(build_error_str(
-                    num_ifstreams, num_ofstreams, num_workers
-            ))
+            invalid_argument(build_error_str(num_workers))
     {}
 
 std::string
-Master::NotEnoughWorkersException::build_error_str(
-            std::size_t num_ifstreams,
-            std::size_t num_ofstreams,
-            int num_workers
-    ) {
-        std::ostringstream msg;
-        msg << "Number workers must be at least the number of ifstreams and " <<
-            "number of ofstreams. " <<
-            "Number workers = " << num_workers <<
-            ". Number ifstreams = " << num_ifstreams <<
-            ". Number ofstreams = " << num_ofstreams;
+Master::NotEnoughWorkersException::build_error_str(const int num_workers) {
+    std::ostringstream msg;
+    msg << "Number workers must be at least 1. Given: " << num_workers << "."
+            << std::endl;
 
-        return msg.str();
-    }
+    return msg.str();
+}
 
 } // namespace shiraz::MapReduce
 

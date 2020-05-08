@@ -64,20 +64,12 @@ private:
 };
 
 struct Master::NotEnoughWorkersException: std::invalid_argument {
-    NotEnoughWorkersException(
-            std::size_t num_ifstreams,
-            std::size_t num_ofstreams,
-            int num_workers
-    );
+    NotEnoughWorkersException(const int num_workers);
 
 private:
     static
     std::string
-    build_error_str(
-            std::size_t num_ifstreams,
-            std::size_t num_ofstreams,
-            int num_workers
-    );
+    build_error_str(const int num_workers);
 };
 
 } // namespace shiraz::MapReduce
