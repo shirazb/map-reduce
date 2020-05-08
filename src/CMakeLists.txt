@@ -2,12 +2,14 @@ set(SOURCES
         master.cpp
         worker.cpp
         common.cpp
+        emit-streams.cpp
 )
 
 set(HEADERS
         ${SBMapReduce_INCLUDE_DIR}/sb-mapreduce/master.h
         ${SBMapReduce_INCLUDE_DIR}/sb-mapreduce/worker.h
         ${SBMapReduce_INCLUDE_DIR}/sb-mapreduce/common.h
+        ${SBMapReduce_INCLUDE_DIR}/sb-mapreduce/emit-streams.h
 )
 
 add_library(libsb-mapreduce ${SOURCES} ${HEADERS})

@@ -1,57 +1,51 @@
 #pragma once
 
+#include <any>
+#include <cstddef>
 #include <string>
 #include <fstream>
 #include <list>
+#include <vector>
+#include <functional>
 
 namespace shiraz::MapReduce {
 
-struct IntermediateEmitter;
-struct ResultEmitter;
+/* Used internally to represent 1D slice (view) of 2D vector of strings. */
+using _vec_of_const_str_ref =
+        std::vector<std::reference_wrapper<const std::string>>;
 
-using InputFileIterator = std::istream_iterator<std::string>;
-using OutputFileIterator = std::ostream_iterator<std::string>;
+class EmitIntermediateStream;
+using EmitResultStream = std::ofstream;
 
-using UserMapFunc = void(*)(std::string, IntermediateEmitter&);
-using UserReduceFunc = void(*)(std::string, std::list<std::string>, ResultEmitter&);
+using InputFilePaths = std::vector<std::string>;
+using OutputFilePaths = std::vector<std::string>;
 
-using IntermediateHashFunc = int(*)(int);
+using UserMapFunc = void(*)(std::ifstream&, EmitIntermediateStream&);
+using UserReduceFunc = void(*)(std::string, std::list<std::string>, EmitResultStream&);
 
+using IntermediateHashFunc = std::size_t(*)(std::any);
 
-struct IntermediateEmitter {
+template<typename K_i = std::string, typename V_i = std::string>
+class IntermediateResult: public std::pair<K_i, V_i> {
 public:
-    IntermediateEmitter(
-            std::ofstream intermediate_ofs
-    ):
-            intermediate_ofs{std::move(intermediate_ofs)} {}
-
-    void operator()(const std::string ikey, const std::string ivalue);
-
-private:
-    std::ofstream intermediate_ofs;
+    using std::pair<K_i, V_i>::pair;
 };
 
-struct ResultEmitter {
-public:
-    ResultEmitter(
-            OutputFileIterator output_it
-    ):
-            output_it{std::move(output_it)} {}
-
-    void operator()(const std::string resvalue);
-
-private:
-    OutputFileIterator output_it;
-};
-
+template<typename K_i, typename V_i>
+std::ostream&
+operator<<(std::ostream& os, const IntermediateResult<K_i, V_i>& itr) {
+    os << itr.first << "," << itr.second << std::endl;
+    return os;
 }
 
-namespace shiraz::MapReduce::utils {
+namespace utils {
 
-void log_file(
-        const std::string file_path,
-        int num_words = 30
+void
+log_file(
+        const std::string& file_path,
+        int num_words = 30,
+        char get_line_delim = '\n'
 );
 
-
-}
+} // namespace ::utils
+} // namespace shiraz::MapReduce

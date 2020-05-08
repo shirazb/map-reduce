@@ -3,58 +3,92 @@
 #include <sb-mapreduce/worker.h>
 #include <sb-mapreduce/common.h>
 
+#include <functional>
 #include <unordered_set>
 #include <sstream>
-#include <iostream>
+#include <vector>
+#include <memory>
+
+namespace {
+
+shiraz::MapReduce::_vec_of_const_str_ref
+slice_M_reduce_files_for(
+        const int r,
+        const std::vector<std::vector<std::string>>& inter_fps
+);
+
+}
 
 namespace shiraz::MapReduce {
 
 Master::Master(
-        std::vector<InputFileIterator> input_file_iterators,
-        std::vector<OutputFileIterator> output_file_iterators,
+        std::shared_ptr<InputFilePaths> input_files,
+        std::shared_ptr<OutputFilePaths> output_files,
         UserMapFunc map_f,
         UserReduceFunc reduce_f,
         int num_workers,
         IntermediateHashFunc intermediate_hash
 ) :
-        input_file_iterators{std::move(input_file_iterators)},
-        output_file_iterators{std::move(output_file_iterators)},
+        input_files{std::move(input_files)},
+        output_files{std::move(output_files)},
         map_f{map_f},
         reduce_f{reduce_f},
         num_workers{num_workers},
         intermediate_hash{intermediate_hash}
 {
-    // Establish invariant: Enough workers for the tasks.
-    if (this->input_file_iterators.size() > this->num_workers ||
-            this->output_file_iterators.size() > this->num_workers) {
-        throw Master::NotEnoughWorkersException(
-                this->input_file_iterators.size(),
-                this->output_file_iterators.size(),
-                this->num_workers
-        );
-    }
+    this->establish_invariants_or_throw();
 }
 
-void Master::go() {
-    std::unordered_set<Worker, Worker::Hash> free_workers;
-    std::unordered_set<Worker, Worker::Hash> busy_workers;
+void
+Master::go() {
+    std::unordered_set<Worker> free_workers;
+    std::unordered_set<Worker> busy_workers;
 
     /* Construct all the workers. */
 
-    for (int i = 0; i < this->num_workers; i++) {
-        free_workers.emplace(Worker{i});
-    }
+    const int&& M = this->input_files->size();
+    const int&& R = this->output_files->size();
 
-    /* Store intermediate output paths returned by map so we can forward to
-       reduce */
-    
-    std::vector<std::string> intermediate_file_paths;
+    for (int i = 0; i < this->num_workers; i++) {
+        free_workers.emplace(Worker{i, M, R});
+    }
 
     /* Map Stage */
 
-    // Iterator of file stream iterators
-    auto cur_ifstream_it_it = this->input_file_iterators.begin();
-    const auto end_ifstream_it_it = this->input_file_iterators.end();
+    // TODO: Should pass in ref?
+    // M x R matrix of intermediate file paths.
+    const auto intermediate_file_paths = this->map_stage(
+            free_workers, busy_workers
+    );
+
+    /* Reduce Stage */
+
+    this->reduce_stage(free_workers, busy_workers, intermediate_file_paths);
+
+    /* Cleanup */
+
+    // TODO: RAII-ify the intermediate file resource. Also, consider who should 
+    // delete / have ownership. This cleanup should be automatic in the
+    // destructor of a resource handle.
+
+    for (const auto& v: intermediate_file_paths) {
+        for (const auto& fp: v) {
+            std::filesystem::remove(fp);
+        }
+    }
+}
+
+/**
+ * Invariant: All workers are free before and after this function.
+ * Return the vector of intermediate file paths produced by the map tasks.
+ */
+std::vector<std::vector<std::string>>
+Master::map_stage(
+        std::unordered_set<Worker>& free_workers,
+        std::unordered_set<Worker>& busy_workers
+) {
+    // Store and return for reduce stage later.    
+    std::vector<std::vector<std::string>> intermediate_file_paths;
 
     // Assume for now we definitely have enough workers to do this in iteration
     // of the outer loop.
@@ -62,21 +96,25 @@ void Master::go() {
     // While workers remain, keep scheduling tasks.
     // Move free workers into busy set.
     // Invoke map task on free worker and store returned intermediate file path.
-    while (cur_ifstream_it_it != end_ifstream_it_it) {
-        while (!free_workers.empty() && cur_ifstream_it_it != end_ifstream_it_it) {
-            Worker w = free_workers.extract(
+
+    auto cur_input_fp = this->input_files->begin();
+    const auto end_input_fp = this->input_files->end();
+    int m;
+
+    while (cur_input_fp != end_input_fp) {
+        while (!free_workers.empty() && cur_input_fp != end_input_fp) {
+            Worker& w = free_workers.extract(
                     free_workers.begin()
-            ).value();
+            ).value();           
 
             intermediate_file_paths.emplace_back(
-                    w.map_task(
-                        this->map_f, *cur_ifstream_it_it
-                    )
+                    w.map_task(m, this->map_f, *cur_input_fp, this->intermediate_hash)
             );
 
             busy_workers.emplace(std::move(w));
 
-            ++cur_ifstream_it_it;
+            ++cur_input_fp;
+            ++m;
         }
     }
 
@@ -84,66 +122,94 @@ void Master::go() {
     // This would happen from messages passed from worker to master.
     free_workers.merge(busy_workers);
 
-    /* Reduce Stage */
+    return intermediate_file_paths;
+}
 
-    int cur_output_file_idx = 0;
-    auto cur_output_file_it = this->output_file_iterators.begin();
-    auto output_file_end_it = this->output_file_iterators.end();
+/**
+ * Invariant: All workers are free before and after this function.
+ * Return the vector of intermediate file paths produced by the map tasks.
+ */
+void
+Master::reduce_stage(
+        std::unordered_set<Worker>& free_workers,
+        std::unordered_set<Worker>& busy_workers,
+        const std::vector<std::vector<std::string>>& intermediate_file_paths
+) {
+    int r = 0;
+    auto cur_output_fp = this->output_files->begin();
+    const auto end_output_fp = this->output_files->end();
 
-    while (cur_output_file_it != output_file_end_it) {
-        while (!free_workers.empty() && cur_output_file_it != output_file_end_it) {
-            Worker w = free_workers.extract(
+    while (cur_output_fp != end_output_fp) {
+        while (!free_workers.empty() && cur_output_fp != end_output_fp) {
+            Worker& w = free_workers.extract(
                     free_workers.begin()
             ).value();
 
-            // TODO: For now, we just take 1 intermediate file instead of R.
-            std::ifstream inter_ifs{intermediate_file_paths[cur_output_file_idx]};
-            std::istream_iterator<std::string> inter_it{inter_ifs};
+            const auto inter_fps = slice_M_reduce_files_for(r,
+                    intermediate_file_paths
+            );
 
-            w.reduce_task(reduce_f, inter_ifs, *cur_output_file_it);
+            w.reduce_task(this->reduce_f, inter_fps, *cur_output_fp);
 
             busy_workers.emplace(std::move(w));
 
-            ++cur_output_file_it;
-            ++cur_output_file_idx;
+            ++cur_output_fp;
+            ++r;
         }
     }
 
     free_workers.merge(busy_workers);
-
-    /* Cleanup */
-
-    // TODO: RAII-ify the intermediate file resource. Also, consider who should 
-    // delete / have ownership.
-
-    std::for_each(intermediate_file_paths.begin(), intermediate_file_paths.end(),
-            [](auto& fp) { std::filesystem::remove(fp); }
-    );
 }
 
-Master::NotEnoughWorkersException::NotEnoughWorkersException(
-            std::size_t num_ifstreams,
-            std::size_t num_ofstreams,
-            int num_workers
-    ):
-            invalid_argument(build_error_str(
-                    num_ifstreams, num_ofstreams, num_workers
-            ))
-    {}
+void
+Master::establish_invariants_or_throw() const {
+    /* Num input and output files > 1. */
 
-std::string Master::NotEnoughWorkersException::build_error_str(
-            std::size_t num_ifstreams,
-            std::size_t num_ofstreams,
-            int num_workers
-    ) {
-        std::ostringstream msg;
-        msg << "Number workers must be at least the number of ifstreams and " <<
-            "number of ofstreams. " <<
-            "Number workers = " << num_workers <<
-            ". Number ifstreams = " << num_ifstreams <<
-            ". Number ofstreams = " << num_ofstreams;
-
-        return msg.str();
+    if (this->input_files->empty()) {
+        throw Master::InvalidArgumentException("Must provide at least one "
+                                               "input file.");
+    }
+    if (this->output_files->empty()) {
+        throw Master::InvalidArgumentException("Must provide at least one "
+                                               "output file.");
     }
 
+    /* User map, reduce and hash funcs are non-null. */
+
+    if (!this->map_f) {
+        throw Master::InvalidArgumentException("Provided UserMapFunc is null.");
+    }
+    if (!this->reduce_f) {
+        throw Master::InvalidArgumentException("Provided UserReduceFunc is null.");
+    }
+    if (!this->intermediate_hash) {
+        throw Master::InvalidArgumentException("Provided IntermediateHash is null.");
+    }
+
+    /* At least 1 worker. */
+
+    if (this->num_workers < 1) {
+        throw Master::InvalidArgumentException("Number workers must be at least 1.");
+    }
+}
+
 } // namespace shiraz::MapReduce
+
+using namespace shiraz::MapReduce;
+
+namespace {
+
+_vec_of_const_str_ref
+slice_M_reduce_files_for(
+        const int r,
+        const std::vector<std::vector<std::string>>& inter_fps
+) {
+    _vec_of_const_str_ref slice;
+    for (const auto& fps_for_m: inter_fps) {
+        slice.push_back(std::cref(fps_for_m[r]));
+    }
+
+    return slice;
+}
+
+} // namespace anonymous
