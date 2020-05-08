@@ -3,6 +3,7 @@
 
 #include <sb-mapreduce/common.h>
 
+#include <any>
 #include <iterator>
 #include <fstream>
 #include <vector>
@@ -37,7 +38,7 @@ public:
     template<typename K_i, typename V_i>
     EmitIntermediateStream&
     operator<<(IntermediateResult<K_i, V_i>&& ir) {
-        const auto r = this->hash_inter(ir.first);
+        const auto r = this->hash_inter(std::any{ir.first});
         this->ofss[r] << ir.first << "," << ir.second << std::endl;
         return *this;
     }
@@ -76,6 +77,7 @@ class EmitIntermediateStreamIterator {
 public:
     using iterator_category = std::output_iterator_tag;
 
+    /* Is default constructable, like std::ostream_iterator */
     EmitIntermediateStreamIterator() = default;
 
     explicit EmitIntermediateStreamIterator(
@@ -83,12 +85,10 @@ public:
     ) :
             emit_s{emit_s} {}
 
-    /* Is default constructable, like std::ostream_iterator */
+    /* Is copyable */
 
     EmitIntermediateStreamIterator(
             const EmitIntermediateStreamIterator&) = default;
-
-    /* Is copyable */
 
     EmitIntermediateStreamIterator&
     operator=(const EmitIntermediateStreamIterator&) = default;
