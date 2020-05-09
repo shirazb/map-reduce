@@ -17,3 +17,5 @@ add_library(libsb-mapreduce ${SOURCES} ${HEADERS})
 target_include_directories(libsb-mapreduce PUBLIC ${SBMapReduce_INCLUDE_DIR})
 
 target_compile_features(libsb-mapreduce PRIVATE cxx_std_17)
+
+target_link_libraries(libsb-mapreduce PRIVATE doctest)

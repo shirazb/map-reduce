@@ -24,6 +24,9 @@ message(STATUS "Copied data directory to build location.")
 set(SBMapReduce_INCLUDE_DIR "${SBMapReduce_SOURCE_DIR}/include")
 set(SBMapReduce_BINARY_INCLUDE_DIR "${PROJECT_BINARY_DIR}/include")
 
+# TODO: For now, just always do this. Figure out proper doctest building later.
+add_subdirectory(extern/doctest)
+
 add_subdirectory(src)
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR SB_MAPREDUCE_BUILD_DEMO)
