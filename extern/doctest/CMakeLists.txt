@@ -1,8 +1,6 @@
 include(FetchContent)
 find_package(Git REQUIRED)
 
-message(STATUS "Configuring doctest")
-
 FetchContent_Declare(
         doctest
         GIT_REPOSITORY https://github.com/onqtam/doctest
