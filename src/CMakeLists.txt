@@ -25,9 +25,8 @@ target_compile_features(libsb-mapreduce-objects PUBLIC cxx_std_17)
 # the default main test runner instead.
 if(SB_MAPREDUCE_SHOULD_TEST)
     target_compile_definitions(libsb-mapreduce-objects PUBLIC
-            $<$<CONFIG:Debug>:DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN>
-            $<$<CONFIG:Release>:DOCTEST_CONFIG_DISABLE>
-    )
+            $<IF: $<AND:$<CONFIG:Release>, $<BOOL:${SB_MAPREDUCE_SHOULD_TEST}>>: DOCTEST_CONFIG_DISABLE, DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN>
+    )   #     if        config is release  and  SB_MAPREDUCE_SHOULD_TEST     then   ^                else  ^
 endif()
 
 # The actual libsb-mapreduce library.
