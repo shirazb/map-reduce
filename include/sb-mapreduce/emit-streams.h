@@ -90,7 +90,7 @@ private:
         std::vector<decltype(test_file_prefix)> test_fps;
 
         // Dummy test results
-        std::vector<IntermediateResult<int, std::string>> irs;
+        std::vector<IntermediateResult<int>> irs;
         std::string test_word_prefix = "dfjk34df-";
 
         constexpr int num_ofs = 5;
@@ -202,9 +202,8 @@ private:
         for (int i = 0; i < num_ofs; i++) {
             std::filesystem::remove(test_fps[i]);
         }
-    }
 
-
+    } // TEST_CASE_CLASS
 };
 
 class EmitIntermediateStreamIterator {
