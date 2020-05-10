@@ -11,6 +11,7 @@
 
 #include <doctest/doctest.h>
 #include <filesystem>
+#include <sstream>
 
 namespace shiraz::MapReduce {
 
@@ -34,7 +35,7 @@ public:
     template<typename K_i, typename V_i>
     EmitIntermediateStream&
     operator<<(IntermediateResult<K_i, V_i>& ir) {
-        this << std::move(ir);
+        *this << std::move(ir);
         return *this;
     }
 
@@ -49,13 +50,13 @@ public:
     template<typename K_i, typename V_i>
     void
     to_stream(IntermediateResult<K_i, V_i>& ir) {
-        this << ir;
+        *this << ir;
     }
 
     template<typename K_i, typename V_i>
     void
     to_stream(IntermediateResult<K_i, V_i>&& ir) {
-        this << ir;
+        *this << ir;
     }
 
     /* Composite boolean operators that `all` recurse on each sub-ofs. */
@@ -75,44 +76,101 @@ private:
     IntermediateHashFunc hash_inter;
     std::vector<std::ofstream> ofss;
 
-    TEST_CASE_CLASS("[libsb-mapreduce] EmitIntermediateStream constructor sets "
-                    "its fields successfully and without modification") {
+    TEST_CASE_CLASS("[libsb-mapreduce] EmitIntermediateStream") {
+        /* setup */
+
         IntermediateHashFunc hf = [](std::any x) -> std::size_t {
-            return std::any_cast<std::size_t>(x);
+            return static_cast<std::size_t>(std::any_cast<int>(x));
         };
         std::vector<std::ofstream> ofss;
 
         // Dummy test file.
-        auto test_file = std::filesystem::temp_directory_path();
-        test_file /= "sb-mapreduce-EmitIntermediateStream-constructor-test";
+        auto test_file_prefix = std::filesystem::temp_directory_path();
+        test_file_prefix /= "sb-mapreduce-EmitIntermediateStream-constructor-test-";
+        std::vector<decltype(test_file_prefix)> test_fps;
 
-        // Dummy ofs containing dummy word.
-        std::ofstream ofs{test_file};
-        std::string test_word = "234sdfdsf";
-        ofs << test_word;
+        // Dummy test results
+        std::vector<IntermediateResult<int, std::string>> irs;
+        std::string test_word_prefix = "dfjk34df-";
 
+        constexpr int num_ofs = 5;
+
+        for (int i = 0; i < num_ofs; i++) {
+            // Store the fp.
+            const auto& fp = test_file_prefix.string() + std::to_string(i);
+            test_fps.push_back(fp);
+
+            // Store the ofs.
+            ofss.emplace_back(std::ofstream{fp});
+
+            IntermediateResult<int, std::string> ir{i, test_word_prefix
+                    + std::to_string(i)};
+
+            // Store the IR.
+            irs.emplace_back(std::move(ir));
+        }
 
         // Construct.
-        ofss.emplace_back(std::move(ofs));
         EmitIntermediateStream emit{hf, std::move(ofss)};
 
-        // Check fields.
+        SUBCASE("Constructor sets fields successfully and without modification") {
+            CHECK(emit.hash_inter == hf);
+            CHECK(emit.ofss.size() == num_ofs);
 
-        CHECK(emit.hash_inter == hf);
-        CHECK(emit.ofss.size() == 1);
+            for (int i = 0; i < num_ofs; i++) {
+                // Write test data directly to ofs (we are not testing << of emit).
+                emit.ofss[i] << irs[i].second;
 
-        emit.ofss[0].close();
-        std::ifstream ifs{test_file};
+                emit.ofss[i].close();
+                std::ifstream ifs{test_fps[i]};
 
-        std::string actual_word;
-        ifs >> actual_word;
+                std::string actual_word;
+                ifs >> actual_word;
 
-        CHECK(ifs.eof());
-        CHECK(actual_word == test_word);
+                CHECK(ifs.eof());
+                CHECK(actual_word == irs[i].second);
+            }
+        }
 
-        // Delete test file.
-        std::filesystem::remove(test_file);
+        SUBCASE("operator<< sends only the IR to only the correct file") {
+            for (int i = 0; i < num_ofs; i++) {
+                auto& ir = irs[i];
+                // Write test data. Recall our hash func simply sends to ofs at
+                // index of IR key.
+                emit << ir;
+
+                std::ostringstream expected;
+                expected << ir.first << "," << ir.second;
+
+                std::ifstream ifs{test_fps[ir.first]};
+                std::string actual;
+                std::string next;
+
+                // NB: Will break if we introduce whitespace around comma in `k,v`.
+                ifs >> actual;
+
+                // Check next character is endl.
+                // Note getline() will not put the delim char (endl) into next.
+                std::getline(ifs, next);
+                CHECK(next.empty());
+
+                // Read again, check hit EOF.
+                ifs >> next;
+                CHECK(ifs.eof());
+
+                // Check the IR was outputted correctly to the correct ofstream.
+                CHECK(expected.str() == actual);
+            }
+        }
+
+        /* teardown */
+
+        for (int i = 0; i < num_ofs; i++) {
+            std::filesystem::remove(test_fps[i]);
+        }
     }
+
+
 };
 
 class EmitIntermediateStreamIterator {
