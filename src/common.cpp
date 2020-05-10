@@ -29,9 +29,3 @@ log_file(
 }
 
 }
-
-#include <doctest/doctest.h>
-
-TEST_CASE("testing testing") {
-    CHECK(!std::string("hi").empty());
-}
