@@ -98,7 +98,7 @@ private:
         for (int i = 0; i < num_ofs; i++) {
             // Store the fp.
             const auto& fp = test_file_prefix.string() + std::to_string(i);
-            test_fps.push_back(fp);
+            test_fps.emplace_back(fp);
 
             // Store the ofs.
             ofss.emplace_back(std::ofstream{fp});
@@ -132,34 +132,68 @@ private:
             }
         }
 
-        SUBCASE("operator<< sends only the IR to only the correct file") {
-            for (int i = 0; i < num_ofs; i++) {
-                auto& ir = irs[i];
-                // Write test data. Recall our hash func simply sends to ofs at
-                // index of IR key.
+        SUBCASE("Each emit stream interface correctly streams only the IR to only the correct file") {
+
+            using stream_type = void(EmitIntermediateStream&, IntermediateResult<int>&);
+
+            const auto stream1 = [](EmitIntermediateStream& emit, IntermediateResult<int>& ir) {
                 emit << ir;
+            };
+            const auto stream2 = [](EmitIntermediateStream& emit, IntermediateResult<int>& ir) {
+                auto ir_copy = ir;
+                emit << std::move(ir_copy);
+            };
+            const auto stream3 = [](EmitIntermediateStream& emit, IntermediateResult<int>& ir) {
+                emit.to_stream(ir);
+            };
+            const auto stream4 = [](EmitIntermediateStream& emit, IntermediateResult<int>& ir) {
+                auto ir_copy = ir;
+                emit.to_stream(std::move(ir_copy));
+            };
 
-                std::ostringstream expected;
-                expected << ir.first << "," << ir.second;
+            std::vector<std::function<stream_type>> stream_fs;
+            stream_fs.emplace_back(stream1);
+            stream_fs.emplace_back(stream2);
+            stream_fs.emplace_back(stream3);
+            stream_fs.emplace_back(stream4);
 
-                std::ifstream ifs{test_fps[ir.first]};
-                std::string actual;
-                std::string next;
+            const char *stream_strs[] = {
+                    "(<< &)", "(<< &&)",
+                    "to_stream(&)", "to_stream(&&)"
+            };
 
-                // NB: Will break if we introduce whitespace around comma in `k,v`.
-                ifs >> actual;
+            // For each stream_f, run the test. Recall the entire setup is redone
+            // for each subcase.
+            for (int j = 0; j < stream_fs.size(); j++) {
+                SUBCASE(stream_strs[j]) {
+                    for (int i = 0; i < num_ofs; i++) {
+                        auto& ir = irs[i];
 
-                // Check next character is endl.
-                // Note getline() will not put the delim char (endl) into next.
-                std::getline(ifs, next);
-                CHECK(next.empty());
+                        // Perform the test.
+                        stream_fs[j](emit, ir);
 
-                // Read again, check hit EOF.
-                ifs >> next;
-                CHECK(ifs.eof());
+                        std::ostringstream expected;
+                        expected << ir.first << "," << ir.second;
 
-                // Check the IR was outputted correctly to the correct ofstream.
-                CHECK(expected.str() == actual);
+                        // NB: Will break if we introduce whitespace around comma in `k,v`.
+                        std::ifstream ifs{test_fps[ir.first]};
+                        std::string actual;
+                        ifs >> actual;
+
+                        // Check next character is endl.
+                        // Note getline() will not put the delim char (endl) into next.
+                        std::string next;
+                        std::getline(ifs, next);
+                        CHECK(next.empty());
+
+                        // Read again, check hit EOF.
+                        ifs >> next;
+                        CHECK(ifs.eof());
+
+                        // Check the IR was outputted correctly to the correct ofstream.
+                        CHECK(expected.str() == actual);
+                    }
+                }
             }
         }
 

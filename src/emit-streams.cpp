@@ -38,24 +38,3 @@ EmitIntermediateStream::begin() {
 }
 
 } // namespace shiraz::MapReduce
-
-/*
-#include <doctest/doctest.h>
-
-#include <any>
-
-using namespace shiraz::MapReduce;
-
-TEST_CASE_CLASS("EmitIntermediateStream constructor sets its fields") {
-    IntermediateHashFunc hf = [](std::any x) {
-            return std::any_cast<std::size_t>(x);
-    };
-
-    std::vector<std::ofstream> ofss;
-
-    EmitIntermediateStream emit{hf, ofss};
-
-    CHECK(emit.hash_inter == hf);
-    CHECK(emit.ofss == ofss);
-}
-*/
