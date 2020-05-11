@@ -16,6 +16,10 @@ namespace shiraz::MapReduce {
 class EmitIntermediateStream;
 class EmitIntermediateStreamIterator;
 
+namespace test {
+    class EmitIntermediateStream_T;
+}
+
 class EmitIntermediateStream {
 public:
     EmitIntermediateStream(
@@ -31,7 +35,7 @@ public:
     template<typename K_i, typename V_i>
     EmitIntermediateStream&
     operator<<(IntermediateResult<K_i, V_i>& ir) {
-        this << std::move(ir);
+        *this << std::move(ir);
         return *this;
     }
 
@@ -46,13 +50,13 @@ public:
     template<typename K_i, typename V_i>
     void
     to_stream(IntermediateResult<K_i, V_i>& ir) {
-        this << ir;
+        *this << ir;
     }
 
     template<typename K_i, typename V_i>
     void
     to_stream(IntermediateResult<K_i, V_i>&& ir) {
-        this << ir;
+        *this << ir;
     }
 
     /* Composite boolean operators that `all` recurse on each sub-ofs. */
@@ -71,6 +75,8 @@ public:
 private:
     IntermediateHashFunc hash_inter;
     std::vector<std::ofstream> ofss;
+
+    friend class test::EmitIntermediateStream_T;
 };
 
 class EmitIntermediateStreamIterator {
