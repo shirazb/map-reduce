@@ -12,24 +12,30 @@ set(HEADERS
         ${SBMapReduce_INCLUDE_DIR}/sb-mapreduce/emit-streams.h
 )
 
-# Expose as object library. From these objects, we can make both the regular
-# library, and the test executables, without compiling the sources from scratch
-# each time.
+# Expose as object library and static library. We build the static library once
+# for actual use, and the object library once to be shared by each test exe.
+# We do not have tests in the production code as an executable that links against
+# it with DOCTEST_CONFIG_DISABLE will get linker errors
 
-add_library(libsb-mapreduce-objects OBJECT ${SOURCES} ${HEADERS})
-target_include_directories(libsb-mapreduce-objects PUBLIC ${SBMapReduce_INCLUDE_DIR})
-target_link_libraries(libsb-mapreduce-objects PUBLIC doctest)
-target_compile_features(libsb-mapreduce-objects PUBLIC cxx_std_17)
+#################### OBJ LIB FOR TESTS #########################################
 
-# The actual libsb-mapreduce library.
+if(SB_MAPREDUCE_SHOULD_TEST)
+    add_library(libsb-mapreduce-objects OBJECT ${SOURCES} ${HEADERS})
+    target_include_directories(libsb-mapreduce-objects PUBLIC ${SBMapReduce_INCLUDE_DIR})
+    target_link_libraries(libsb-mapreduce-objects PUBLIC doctest)
+    target_compile_features(libsb-mapreduce-objects PUBLIC cxx_std_17)
+endif()
 
-add_library(libsb-mapreduce $<TARGET_OBJECTS:libsb-mapreduce-objects>)
+#################### ACTUAL STATIC LIB #########################################
 
-# Needs doctest to compile itself as contains tests in production code,
-# but if an external project links against our lib they don't need to use doctest,
-# or if they do, will link against it themselves.
-target_link_libraries(libsb-mapreduce PRIVATE doctest)
+add_library(libsb-mapreduce ${SOURCES} ${HEADERS})
+
+# Must be public because tests exist in headers.
+target_link_libraries(libsb-mapreduce PUBLIC doctest)
+
+target_include_directories(libsb-mapreduce PUBLIC ${SBMapReduce_INCLUDE_DIR})
+
 target_compile_features(libsb-mapreduce PRIVATE cxx_std_17)
-# Yes we already get the above two commands transitively from the object
-# library, as it used PUBLIC, but the sb-mapreduce library only needs them
-# privately, so restate the commands here as PRIVATE.
+
+# No need to define DOCTEST_CONFIG_DISABLE, as doctest doesn't exist in the
+# production code.

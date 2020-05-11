@@ -43,7 +43,7 @@ mark_as_advanced(SB_MAPREDUCE_IS_ROOT_PROJECT)
 if(SB_MAPREDUCE_IS_ROOT_PROJECT OR SB_MAPREDUCE_BUILD_TESTING)
     include(CTest)     # Calls enable_testing() which sets BUILD_TESTING
     set(SB_MAPREDUCE_SHOULD_TEST ON)
-elseif()
+else()
     set(SB_MAPREDUCE_SHOULD_TEST OFF)
 endif()
 
