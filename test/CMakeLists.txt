@@ -93,6 +93,7 @@ endfunction()
 
 set(TESTS
         emit-intermediate-stream
+        common
 )
 
 foreach(TEST ${TESTS})
