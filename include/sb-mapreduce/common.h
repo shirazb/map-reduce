@@ -7,6 +7,7 @@
 #include <list>
 #include <vector>
 #include <functional>
+#include <iostream>
 
 namespace shiraz::MapReduce {
 
@@ -43,8 +44,9 @@ namespace utils {
 void
 log_file(
         const std::string& file_path,
-        int num_words = 30,
-        char get_line_delim = '\n'
+        const int n = 30,
+        const char delim = '\n',
+        std::ostream& os = std::cout
 );
 
 } // namespace ::utils
