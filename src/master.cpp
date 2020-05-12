@@ -99,7 +99,7 @@ Master::map_stage(
 
     auto cur_input_fp = this->input_files->begin();
     const auto end_input_fp = this->input_files->end();
-    int m;
+    int m = 0;
 
     while (cur_input_fp != end_input_fp) {
         while (!free_workers.empty() && cur_input_fp != end_input_fp) {
