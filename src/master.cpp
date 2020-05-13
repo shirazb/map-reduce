@@ -3,6 +3,7 @@
 #include <sb-mapreduce/worker.h>
 #include <sb-mapreduce/common.h>
 
+#include <filesystem>
 #include <functional>
 #include <unordered_set>
 #include <sstream>
