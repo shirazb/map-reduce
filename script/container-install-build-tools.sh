@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#### CMAKE ####
+
 CMAKE_VER_MAJOR=cmake-3.17
 CMAKE_VER=cmake-3.17.2-Linux-x86_64
 
@@ -16,6 +18,7 @@ mv bin/* /usr/bin || exit 1
 # mv command will fail saying target directory not empty.
 mv share/${CMAKE_VER_MAJOR} /usr/share && \
 mv --no-clobber share/aclocal share/icons share/mime /usr/share && \
+mkdir -p /usr/share/applications && \
 mv share/applications/* /usr/share/applications/* || exit 1
 
 # cd back into script/
