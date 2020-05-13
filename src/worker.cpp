@@ -46,7 +46,7 @@ Worker::map_task(
     std::vector<std::string> inter_fps;
 
     for (int r = 0; r < R; r++) {
-        const auto fp = this->get_intermediate_fp(m ,r);
+        const auto fp = this->mk_intermediate_fp(m, r);
         inter_ofs.emplace_back(
                 this->try_open_file_or_throw<std::ofstream, inter_file>(fp)
         );
@@ -135,7 +135,7 @@ Worker::try_open_file_or_throw(const std::string& fp, Params_ifs... args, ...) {
 }
 
 std::string
-Worker::get_intermediate_fp(const int m, const int r) const {
+Worker::mk_intermediate_fp(const int m, const int r) const {
     // NB: temp_directory_path() not thread-safe
     static const std::string intermediate_file_dir =
             std::filesystem::temp_directory_path();

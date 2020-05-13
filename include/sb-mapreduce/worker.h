@@ -67,7 +67,7 @@ private:
     );
 
     std::string
-    get_intermediate_fp(const int m, const int r) const;
+    mk_intermediate_fp(const int m, const int r) const;
 };
 
 struct Worker::FailedToOpenUserFileException: public std::invalid_argument {
