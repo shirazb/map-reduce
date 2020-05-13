@@ -22,7 +22,7 @@ cmake -S <path-to-this-dir> -BUILD_SHARED_LIBS=ON  ...   # Build as shared lib
 
 The built library can be found in `<path-to-build-dir>/src`.
 
-The built `dev_demo` executable can be found in `<path-to-build-dir>/exe`.
+The built `dev-demo` executable can be found in `<path-to-build-dir>/exe`.
 
 If you do not wish to build the demo, the option `SB_MAPREDUCE_BUILD_DEMO` can be set at configure time.
 If you are using this CMake project as a sub-project of your own build, the demo will not be built by default, but you can override this by setting that option.
@@ -37,8 +37,13 @@ As of last writing, this defaults to "pg-being-earnest.txt".
 This file, along with other example text files, can be downloaded from TODO MIT GITHUB.
 The output file will be in `outputs/word_count.txt`.
 
-When running the demo, your current working directory must be the CMake build directory you previously specified.
+At configure time, the entire `data` directory will be copied to the CMake build directory you previously specified.
+This means, when running the demo, your current working directory must be that build directory.
+Thus, to run the demo, assuming the required data directories existed at configure time, you could do:
 
+```shell script
+(cd <path-to-build-dir> && exe/dev-demo)
+```
 ## Using the MapReduce library
 
 ### Including the Headers
